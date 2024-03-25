@@ -27,4 +27,12 @@ app.get("/status", (req, res) => {
     res.send(status);
  });
 
+ app.get("/vibecheck", (req, res) => {
+   const status = {
+      "Status": "Vibing"
+   };
+   
+   res.send(status);
+});
+
  module.exports = app;
