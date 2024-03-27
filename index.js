@@ -18,7 +18,7 @@ app.get("/status", (req, res) => {
 });
 
 // Mount the content routes
-// app.use('/', contentRoutes);
+app.use('/', contentRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000; // Use the provided port or default to 3000
