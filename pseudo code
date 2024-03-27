@@ -1,2 +1,7 @@
 Routes:
 
+- /listAll
+    - title, description, thumbnail
+
+- /createContent
+    -

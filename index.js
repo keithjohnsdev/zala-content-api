@@ -1,38 +1,29 @@
 const express = require("express");
+const contentRoutes = require('./contentRoutes');
 
 // Create a new Express application
 const app = express();
 
+// Middleware for parsing JSON bodies
+app.use(express.json());
+
 // Define routes
 
-// Example route to get all items from a table
-// app.get("/items", async (req, res) => {
-//   try {
-//     // Query to select all items from a table
-//     const result = await pool.query("SELECT * FROM your_table");
-//     // Send the response with the retrieved items
-//     res.json(result.rows);
-//   } catch (error) {
-//     // If an error occurs, send an error response
-//     console.error("Error executing query", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
-
 app.get("/status", (req, res) => {
-    const status = {
-       "Status": "Running"
-    };
-    
-    res.send(status);
- });
+  const status = {
+    Status: "Running",
+  };
 
- app.get("/vibecheck", (req, res) => {
-   const status = {
-      "Status": "Vibing"
-   };
-   
-   res.send(status);
+  res.send(status);
 });
 
- module.exports = app;
+// Mount the content routes
+app.use('/', contentRoutes);
+
+// Start the server
+const PORT = process.env.PORT || 3000; // Use the provided port or default to 3000
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+module.exports = app;
