@@ -71,6 +71,29 @@ router.post(
   }
 );
 
+router.get("/listMyContent", async (req, res) => {
+  try {
+    const { username } = req.query;
+
+    // Fetch content from the database for the given username
+    const queryResult = await db.query(
+      `SELECT video_id, title, description, focus, s3_thumbnail, created_at, updated_at 
+       FROM videos 
+       WHERE username = $1`,
+      [username]
+    );
+
+    // Extract the rows from the query result
+    const contentList = queryResult.rows;
+
+    res.status(200).json(contentList);
+  } catch (error) {
+    console.error("Error fetching content:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 router.get("/contentStatus", (req, res) => {
   const status = {
     Status: "Content Routes Working",

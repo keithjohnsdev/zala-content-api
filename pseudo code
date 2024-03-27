@@ -4,4 +4,4 @@ Routes:
     - title, description, thumbnail
 
 - /createContent
-    -
+    - request fields: video, thumbnail, username, title, focus, description
