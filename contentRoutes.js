@@ -71,4 +71,12 @@ router.post(
   }
 );
 
+router.get("/contentStatus", (req, res) => {
+  const status = {
+    Status: "Content Routes Working",
+  };
+
+  res.send(status);
+});
+
 module.exports = router;
