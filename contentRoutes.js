@@ -77,7 +77,7 @@ router.get("/listMyContent", async (req, res) => {
 
     // Fetch content from the database for the given username
     const queryResult = await db.query(
-      `SELECT video_id, title, description, focus, s3_thumbnail, created_at, updated_at, published 
+      `SELECT video_id, title, description, focus, s3_video_url, s3_thumbnail, created_at, updated_at, published 
        FROM videos 
        WHERE username = $1`,
       [username]
