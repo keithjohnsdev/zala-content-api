@@ -24,7 +24,7 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      const { creator_user_uuid, title, focus, description, creator_name, creator_profile_url, markdown_description } = req.body;
+      const { creator_user_uuid, title, focus, description, creator_name, creator_profile_url } = req.body;
       const videoFile = req.files["video"][0];
       const thumbnailFile = req.files["thumbnail"][0];
 
@@ -52,7 +52,7 @@ router.post(
 
       // Save content metadata to the database
       await db.query(
-        "INSERT INTO videos (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, markdown_description, creator_user_uuid) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+        "INSERT INTO videos (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
         [
           title,
           focus,
@@ -61,7 +61,6 @@ router.post(
           thumbnailUploadResult.Location,
           creator_name,
           creator_profile_url,
-          markdown_description,
           creator_user_uuid
         ]
       );
@@ -82,7 +81,7 @@ router.get("/content/:creatorId", async (req, res) => {
     // Fetch content from the database for the given creatorId
     const queryResult = await db.query(
       `SELECT video_id, title, description, focus, s3_video_url, s3_thumbnail, created_at, updated_at, published,
-       creator_user_uuid, creator_name, creator_profile_url, markdown_description
+       creator_user_uuid, creator_name, creator_profile_url
        FROM videos
        WHERE creator_user_uuid = $1`,
       [creatorId] // Update the parameter name to creatorId
