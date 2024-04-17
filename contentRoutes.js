@@ -74,16 +74,17 @@ router.post(
   }
 );
 
-router.get("/content/:userId", async (req, res) => {
+router.get("/content/:creatorId", async (req, res) => {
   try {
-    const { userId } = req.params; // Use req.params instead of req.query
+    const { creatorId } = req.params; // Use req.params instead of req.query
 
-    // Fetch content from the database for the given userId
+    // Fetch content from the database for the given creatorId
     const queryResult = await db.query(
-      `SELECT video_id, title, description, focus, s3_video_url, s3_thumbnail, created_at, updated_at, published 
-       FROM videos 
-       WHERE username = $1`,
-      [userId] // Update the parameter name to userId
+      `SELECT video_id, title, description, focus, s3_video_url, s3_thumbnail, created_at, updated_at, published,
+       creator_user_uuid, creator_name, creator_profile_url, markdown_description
+       FROM videos
+       WHERE creator_user_uuid = $1`,
+      [creatorId] // Update the parameter name to creatorId
     );
 
     // Extract the rows from the query result
