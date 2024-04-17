@@ -17,14 +17,14 @@ const s3 = new S3({
 
 // Route for creating new content
 router.post(
-  "/createContent",
+  "/content/create",
   upload.fields([
     { name: "video", maxCount: 1 },
     { name: "thumbnail", maxCount: 1 },
   ]),
   async (req, res) => {
     try {
-      const { username, title, focus, description } = req.body;
+      const { username, title, focus, description, creator_name, creator_profile_url, markdown_description } = req.body;
       const videoFile = req.files["video"][0];
       const thumbnailFile = req.files["thumbnail"][0];
 
@@ -52,7 +52,7 @@ router.post(
 
       // Save content metadata to your database
       await db.query(
-        "INSERT INTO videos (username, title, focus, description, s3_video_url, s3_thumbnail) VALUES ($1, $2, $3, $4, $5, $6)",
+        "INSERT INTO videos (username, title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, markdown_description) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
         [
           username,
           title,
@@ -60,6 +60,9 @@ router.post(
           description,
           videoUploadResult.Location,
           thumbnailUploadResult.Location,
+          creator_name,
+          creator_profile_url,
+          markdown_description
         ]
       );
 
