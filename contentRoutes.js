@@ -52,7 +52,7 @@ router.post(
 
       // Save content metadata to the database
       await db.query(
-        "INSERT INTO videos (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+        "INSERT INTO videos (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
         [
           title,
           focus,
@@ -73,14 +73,14 @@ router.post(
   }
 );
 
-
+// Route for listing content by creator ID
 router.get("/content/:creatorId", async (req, res) => {
   try {
     const { creatorId } = req.params; // Use req.params instead of req.query
 
     // Fetch content from the database for the given creatorId
     const queryResult = await db.query(
-      `SELECT video_id, title, description, focus, s3_video_url, s3_thumbnail, created_at, updated_at, published,
+      `SELECT video_id, title, description, focus, s3_video_url, s3_thumbnail, created_at, updated_at, status,
        creator_user_uuid, creator_name, creator_profile_url
        FROM videos
        WHERE creator_user_uuid = $1`,
@@ -96,6 +96,7 @@ router.get("/content/:creatorId", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 
 router.get("/contentStatus", (req, res) => {
