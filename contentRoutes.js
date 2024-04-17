@@ -24,7 +24,7 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      const { username, title, focus, description, creator_name, creator_profile_url, markdown_description } = req.body;
+      const { creator_user_uuid, title, focus, description, creator_name, creator_profile_url, markdown_description } = req.body;
       const videoFile = req.files["video"][0];
       const thumbnailFile = req.files["thumbnail"][0];
 
@@ -32,29 +32,28 @@ router.post(
       const videoFilename = uuidv4() + "-" + videoFile.originalname;
       const thumbnailFilename = uuidv4() + "-" + thumbnailFile.originalname;
 
-      // Upload video file to S3 with username prefix
+      // Upload video file to S3
       const videoParams = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: `videos/${username}/${videoFilename}`, // Append username to the S3 key
+        Key: `videos/${creator_user_uuid}/${videoFilename}`, // Use creator_user_uuid for S3 key
         Body: videoFile.buffer,
         ContentType: videoFile.mimetype,
       };
       const videoUploadResult = await s3.upload(videoParams).promise();
 
-      // Upload thumbnail file to S3 with username prefix
+      // Upload thumbnail file to S3
       const thumbnailParams = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: `thumbnails/${username}/${thumbnailFilename}`, // Append username to the S3 key
+        Key: `thumbnails/${creator_user_uuid}/${thumbnailFilename}`, // Use creator_user_uuid for S3 key
         Body: thumbnailFile.buffer,
         ContentType: thumbnailFile.mimetype,
       };
       const thumbnailUploadResult = await s3.upload(thumbnailParams).promise();
 
-      // Save content metadata to your database
+      // Save content metadata to the database
       await db.query(
-        "INSERT INTO videos (username, title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, markdown_description) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+        "INSERT INTO videos (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, markdown_description, creator_user_uuid) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
         [
-          username,
           title,
           focus,
           description,
@@ -62,7 +61,8 @@ router.post(
           thumbnailUploadResult.Location,
           creator_name,
           creator_profile_url,
-          markdown_description
+          markdown_description,
+          creator_user_uuid
         ]
       );
 
@@ -73,6 +73,7 @@ router.post(
     }
   }
 );
+
 
 router.get("/content/:creatorId", async (req, res) => {
   try {
