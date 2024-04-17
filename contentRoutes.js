@@ -24,7 +24,7 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      const { creator_user_uuid, title, focus, description, creator_name, creator_profile_url } = req.body;
+      const { creator_user_uuid, title, focus, description, creator_name, creator_profile_url, status } = req.body; // Add status to the request body
       const videoFile = req.files["video"][0];
       const thumbnailFile = req.files["thumbnail"][0];
 
@@ -52,7 +52,7 @@ router.post(
 
       // Save content metadata to the database
       await db.query(
-        "INSERT INTO videos (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+        "INSERT INTO videos (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
         [
           title,
           focus,
@@ -61,7 +61,8 @@ router.post(
           thumbnailUploadResult.Location,
           creator_name,
           creator_profile_url,
-          creator_user_uuid
+          creator_user_uuid,
+          status // Add status to the query parameters
         ]
       );
 
@@ -72,6 +73,7 @@ router.post(
     }
   }
 );
+
 
 // Route for listing content by creator ID
 router.get("/content/:creatorId", async (req, res) => {
@@ -97,7 +99,38 @@ router.get("/content/:creatorId", async (req, res) => {
   }
 });
 
+// Route for deleting content
+router.delete("/content/delete/:videoId", async (req, res) => {
+  try {
+    const { videoId } = req.params; // Get the videoId from the request parameters
 
+    // Fetch content metadata including S3 URLs from the database
+    const queryResult = await db.query(
+      "SELECT s3_video_url, s3_thumbnail FROM videos WHERE video_id = $1",
+      [videoId]
+    );
+
+    // Extract S3 URLs from the query result
+    const { s3_video_url, s3_thumbnail } = queryResult.rows[0];
+
+    // Delete content metadata from the database
+    await db.query(
+      "DELETE FROM videos WHERE video_id = $1",
+      [videoId]
+    );
+
+    // Delete video and thumbnail files from S3
+    await Promise.all([
+      s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: s3_video_url }).promise(),
+      s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: s3_thumbnail }).promise()
+    ]);
+
+    res.status(200).json({ message: "Content deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting content:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 router.get("/contentStatus", (req, res) => {
   const status = {
