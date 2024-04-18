@@ -120,9 +120,6 @@ router.delete("/content/delete/:videoId", async (req, res) => {
     const videoKey = extractS3Key(s3_video_url);
     const thumbnailKey = extractS3Key(s3_thumbnail);
 
-    console.log("S3 Video key:", videoKey);
-    console.log("S3 Thumbnail key:", thumbnailKey);
-
     // Delete content metadata from the database
     await db.query(
       "DELETE FROM videos WHERE video_id = $1",
@@ -151,8 +148,8 @@ function extractS3Key(url) {
   const parts = url.split("/");
   // The key is the portion after the bucket name
   // Join the parts starting from index 3
-  
-
+  return parts.slice(3).join("/");
+}
 
 router.get("/contentStatus", (req, res) => {
   const status = {
