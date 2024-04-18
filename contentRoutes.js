@@ -116,6 +116,13 @@ router.delete("/content/delete/:videoId", async (req, res) => {
     console.log("S3 Video URL:", s3_video_url);
     console.log("S3 Thumbnail URL:", s3_thumbnail);
 
+    // Extract S3 keys from URLs
+    const videoKey = extractS3Key(s3_video_url);
+    const thumbnailKey = extractS3Key(s3_thumbnail);
+
+    console.log("S3 Video key:", videoKey);
+    console.log("S3 Thumbnail key:", thumbnailKey);
+
     // Delete content metadata from the database
     await db.query(
       "DELETE FROM videos WHERE video_id = $1",
@@ -123,12 +130,13 @@ router.delete("/content/delete/:videoId", async (req, res) => {
     );
 
     // Delete video and thumbnail files from S3
-    let s3resp = await Promise.all([
-      s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: s3_video_url }).promise(),
-      s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: s3_thumbnail }).promise()
+    const deletePromises = Promise.all([
+      s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: videoKey }).promise(),
+      s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: thumbnailKey }).promise()
     ]);
 
-    console.log(s3resp);
+    const deleteResults = await deletePromises;
+    console.log(deleteResults);
 
     res.status(200).json({ message: "Content deleted successfully" });
   } catch (error) {
@@ -136,6 +144,14 @@ router.delete("/content/delete/:videoId", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// Function to extract S3 key from URL
+function extractS3Key(url) {
+  // Split the URL by '/'
+  const parts = url.split("/");
+  // The key is the portion after the bucket name
+  // Join the parts starting from index 3
+  
 
 
 router.get("/contentStatus", (req, res) => {
