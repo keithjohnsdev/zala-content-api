@@ -113,6 +113,9 @@ router.delete("/content/delete/:videoId", async (req, res) => {
     // Extract S3 URLs from the query result
     const { s3_video_url, s3_thumbnail } = queryResult.rows[0];
 
+    console.log("S3 Video URL:", s3_video_url);
+    console.log("S3 Thumbnail URL:", s3_thumbnail);
+
     // Delete content metadata from the database
     await db.query(
       "DELETE FROM videos WHERE video_id = $1",
@@ -120,10 +123,12 @@ router.delete("/content/delete/:videoId", async (req, res) => {
     );
 
     // Delete video and thumbnail files from S3
-    await Promise.all([
+    let s3resp = await Promise.all([
       s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: s3_video_url }).promise(),
       s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: s3_thumbnail }).promise()
     ]);
+
+    console.log(s3resp);
 
     res.status(200).json({ message: "Content deleted successfully" });
   } catch (error) {
@@ -131,6 +136,7 @@ router.delete("/content/delete/:videoId", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 router.get("/contentStatus", (req, res) => {
   const status = {
