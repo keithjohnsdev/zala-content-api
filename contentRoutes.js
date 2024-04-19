@@ -36,7 +36,6 @@ router.post(
       const {
         creator_user_uuid,
         title,
-        focus,
         description,
         creator_name,
         creator_profile_url,
@@ -45,6 +44,7 @@ router.post(
         tags,
         publish_time,
         org_id,
+        zala_library
       } = req.body;
       const videoFile = req.files["video"][0];
       const thumbnailFile = req.files["thumbnail"][0];
@@ -80,10 +80,9 @@ router.post(
 
       // Save content metadata to the database
       await db.query(
-        "INSERT INTO content (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, status, accessibility, tags, publish_time, org_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+        "INSERT INTO content (title, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, status, accessibility, tags, publish_time, org_id, zala_library) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
         [
           title,
-          focus,
           description,
           videoUploadResult.Location,
           thumbnailUploadResult.Location,
@@ -95,6 +94,7 @@ router.post(
           parsedTags, // Use the parsed JSON array of tags
           publishTime,
           org_id,
+          zala_library
         ]
       );
 
