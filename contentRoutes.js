@@ -227,8 +227,8 @@ async (req, res) => {
       new_video,
       new_thumbnail
     } = req.body;
-    const videoFile = req.files["video"][0];
-    const thumbnailFile = req.files["thumbnail"][0];
+    const videoFile = req.files["video"][0] || false;
+    const thumbnailFile = req.files["thumbnail"][0] || false;
 
     // Parse the JSON array of tags
     const parsedTags = JSON.parse(tags);
