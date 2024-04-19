@@ -265,7 +265,7 @@ router.put(
         await s3
           .deleteObject({
             Bucket: process.env.S3_BUCKET_NAME,
-            Key: s3_video_url.split("/").slice(-2).join("/"), // Extract video key from URL
+            Key: extractS3Key(s3_video_url), // Extract video key from URL
           })
           .promise();
       }
@@ -289,7 +289,7 @@ router.put(
         await s3
           .deleteObject({
             Bucket: process.env.S3_BUCKET_NAME,
-            Key: s3_thumbnail.split("/").slice(-2).join("/"), // Extract thumbnail key from URL
+            Key: extractS3Key(s3_thumbnail), // Extract thumbnail key from URL
           })
           .promise();
       }
