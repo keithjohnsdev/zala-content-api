@@ -40,7 +40,7 @@ router.post(
         creator_name,
         creator_profile_url,
         status,
-        accessibility, // Remove the accessibility variable from here
+        accessibility,
         tags,
         publish_time,
         org_id,
@@ -56,9 +56,9 @@ router.post(
       // Handle empty string
       const publishTime = publish_time === "" ? null : publish_time;
 
-      // Generate unique filenames for video and thumbnail
-      const videoFilename = uuidv4() + "-" + videoFile.originalname;
-      const thumbnailFilename = uuidv4() + "-" + thumbnailFile.originalname;
+      // Get filenames for video and thumbnail
+      const videoFilename = videoFile.originalname;
+      const thumbnailFilename = thumbnailFile.originalname;
 
       // Upload video file to S3
       const videoParams = {
@@ -203,5 +203,119 @@ router.get("/content/id/:contentId", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// Route for editing existing content
+router.put("/content/edit/:contentId", upload.fields([
+  { name: "video", maxCount: 1 },
+  { name: "thumbnail", maxCount: 1 },
+]),
+async (req, res) => {
+  try {
+    const { contentId } = req.params; // Extract contentId from route params
+    const {
+      creator_user_uuid,
+      title,
+      description,
+      creator_name,
+      creator_profile_url,
+      status,
+      accessibility,
+      tags,
+      publish_time,
+      org_id,
+      zala_library,
+      new_video,
+      new_thumbnail
+    } = req.body;
+    const videoFile = req.files["video"][0];
+    const thumbnailFile = req.files["thumbnail"][0];
+
+    // Parse the JSON array of tags
+    const parsedTags = JSON.parse(tags);
+
+    // Handle empty string
+    const publishTime = publish_time === "" ? null : publish_time;
+
+    // Fetch existing content data from the database
+    const existingContent = await db.query(
+      `SELECT s3_video_url, s3_thumbnail FROM content WHERE content_id = $1`,
+      [contentId]
+    );
+
+    // Extract existing S3 URLs
+    const { s3_video_url, s3_thumbnail } = existingContent.rows[0];
+      
+    // Handle video upload if new_video is true and there is a videoFile
+    let newVideoUrl = s3_video_url;
+    if (new_video === 'true' && videoFile) {
+      // Upload new video file to S3
+      const videoParams = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: `videos/${creator_user_uuid}/${videoFile.originalname}`, // Use contentId for S3 key
+        Body: videoFile.buffer,
+        ContentType: videoFile.mimetype,
+      };
+      const videoUploadResult = await s3.upload(videoParams).promise();
+      newVideoUrl = videoUploadResult.Location;
+
+      // Delete previous video from S3
+      await s3.deleteObject({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: s3_video_url.split("/").slice(-2).join("/") // Extract video key from URL
+      }).promise();
+    }
+
+    // Handle thumbnail upload if new_thumbnail is true
+    let newThumbnailUrl = s3_thumbnail;
+    if (new_thumbnail === 'true' && thumbnailFile) {
+      // Upload new thumbnail file to S3
+      const thumbnailParams = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: `thumbnails/${creator_user_uuid}/${thumbnailFile.originalname}`, // Use contentId for S3 key
+        Body: thumbnailFile.buffer,
+        ContentType: thumbnailFile.mimetype,
+      };
+      const thumbnailUploadResult = await s3.upload(thumbnailParams).promise();
+      newThumbnailUrl = thumbnailUploadResult.Location;
+
+      // Delete previous thumbnail from S3
+      await s3.deleteObject({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: s3_thumbnail.split("/").slice(-2).join("/") // Extract thumbnail key from URL
+      }).promise();
+    }
+
+    // Update content metadata in the database
+    await db.query(
+      `UPDATE content 
+       SET title = $1, description = $2, s3_video_url = $3, s3_thumbnail = $4, 
+           creator_name = $5, creator_profile_url = $6, status = $7, 
+           tags = $8, publish_time = $9, org_id = $10, zala_library = $11, accessibility = $12
+       WHERE content_id = $13`,
+      [
+        title,
+        description,
+        newVideoUrl,
+        newThumbnailUrl,
+        creator_name,
+        creator_profile_url,
+        status,
+        parsedTags,
+        publishTime,
+        org_id,
+        zala_library,
+        accessibility,
+        contentId // Update the content with the specified contentId
+      ]
+    );
+
+    res.status(200).json({ message: "Content updated successfully" });
+  } catch (error) {
+    console.error("Error updating content:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+);
+
 
 module.exports = router;
