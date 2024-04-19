@@ -34,11 +34,9 @@ router.post(
         status,
         accessibility,
         tags,
-      } = req.body; // Add accessibility and tags to the request body
-
-      // Parse the JSON array of tags
-      const parsedTags = JSON.parse(tags);
-
+        publish_time,
+        org_id
+      } = req.body;
       const videoFile = req.files["video"][0];
       const thumbnailFile = req.files["thumbnail"][0];
 
@@ -49,7 +47,7 @@ router.post(
       // Upload video file to S3
       const videoParams = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: `videos/${creator_user_uuid}/${videoFilename}`, // Use creator_user_uuid for S3 key
+        Key: `videos/${creator_user_uuid}/${videoFilename}`,
         Body: videoFile.buffer,
         ContentType: videoFile.mimetype,
       };
@@ -58,7 +56,7 @@ router.post(
       // Upload thumbnail file to S3
       const thumbnailParams = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: `thumbnails/${creator_user_uuid}/${thumbnailFilename}`, // Use creator_user_uuid for S3 key
+        Key: `thumbnails/${creator_user_uuid}/${thumbnailFilename}`,
         Body: thumbnailFile.buffer,
         ContentType: thumbnailFile.mimetype,
       };
@@ -66,7 +64,7 @@ router.post(
 
       // Save content metadata to the database
       await db.query(
-        "INSERT INTO content (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, status, accessibility, tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
+        "INSERT INTO content (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, status, accessibility, tags, publish_time, org_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
         [
           title,
           focus,
@@ -78,7 +76,9 @@ router.post(
           creator_user_uuid,
           status,
           accessibility,
-          parsedTags, // Use the parsed JSON array of tags
+          tags,
+          publish_time,
+          org_id
         ]
       );
 
@@ -91,6 +91,7 @@ router.post(
 );
 
 
+
 // Route for listing content by creator ID
 router.get("/content/:creatorId", async (req, res) => {
   try {
@@ -98,10 +99,7 @@ router.get("/content/:creatorId", async (req, res) => {
 
     // Fetch content from the database for the given creatorId
     const queryResult = await db.query(
-      `SELECT content_id, title, description, focus, s3_video_url, s3_thumbnail, created_at, updated_at, status,
-       creator_user_uuid, creator_name, creator_profile_url, accessibility, tags
-       FROM content
-       WHERE creator_user_uuid = $1`,
+      `SELECT * FROM content WHERE creator_user_uuid = $1`,
       [creatorId] // Update the parameter name to creatorId
     );
 
@@ -114,6 +112,7 @@ router.get("/content/:creatorId", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 
 // Route for deleting content
