@@ -15,6 +15,15 @@ const s3 = new S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
+
+router.get("/contentStatus", (req, res) => {
+  const status = {
+    Status: "Content Routes Working",
+  };
+
+  res.send(status);
+});
+
 // Route for creating new content
 router.post(
   "/content/create",
@@ -167,12 +176,30 @@ function extractS3Key(url) {
   return parts.slice(3).join("/");
 }
 
-router.get("/contentStatus", (req, res) => {
-  const status = {
-    Status: "Content Routes Working",
-  };
+// Route for fetching a single content item by content ID
+router.get("/content/id/:contentId", async (req, res) => {
+  try {
+    const { contentId } = req.params; // Extract the contentId from the route parameters
 
-  res.send(status);
+    // Fetch the content from the database for the given contentId
+    const queryResult = await db.query(
+      `SELECT * FROM content WHERE content_id = $1`,
+      [contentId]
+    );
+
+    // Check if the content exists
+    if (queryResult.rows.length === 0) {
+      return res.status(404).json({ error: "Content not found" });
+    }
+
+    // Extract the content data from the query result
+    const contentData = queryResult.rows[0];
+
+    res.status(200).json(contentData);
+  } catch (error) {
+    console.error("Error fetching content:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 module.exports = router;
