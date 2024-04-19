@@ -34,9 +34,12 @@ router.post(
         status,
         accessibility,
         tags,
-        publish_time,
-        org_id
+        publish_time
       } = req.body;
+
+      // Handle empty string
+      const publishTime = publish_time === "" ? null : publish_time;
+
       const videoFile = req.files["video"][0];
       const thumbnailFile = req.files["thumbnail"][0];
 
@@ -64,7 +67,7 @@ router.post(
 
       // Save content metadata to the database
       await db.query(
-        "INSERT INTO content (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, status, accessibility, tags, publish_time, org_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+        "INSERT INTO content (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, status, accessibility, tags, publish_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
         [
           title,
           focus,
@@ -77,8 +80,7 @@ router.post(
           status,
           accessibility,
           tags,
-          publish_time,
-          org_id
+          publishTime
         ]
       );
 
@@ -89,6 +91,7 @@ router.post(
     }
   }
 );
+
 
 
 
