@@ -43,6 +43,9 @@ router.post(
       // Parse the JSON array of tags
       const parsedTags = JSON.parse(tags);
 
+      // Handle empty string
+      const publishTime = publish_time === "" ? null : publish_time;
+
       // Generate unique filenames for video and thumbnail
       const videoFilename = uuidv4() + "-" + videoFile.originalname;
       const thumbnailFilename = uuidv4() + "-" + thumbnailFile.originalname;
@@ -80,7 +83,7 @@ router.post(
           status,
           accessibility,
           parsedTags, // Use the parsed JSON array of tags
-          publish_time,
+          publishTime,
           org_id,
         ]
       );
