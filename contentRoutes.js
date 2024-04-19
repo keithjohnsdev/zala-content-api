@@ -34,14 +34,14 @@ router.post(
         status,
         accessibility,
         tags,
-        publish_time
+        publish_time,
+        org_id,
       } = req.body;
-
-      // Handle empty string
-      const publishTime = publish_time === "" ? null : publish_time;
-
       const videoFile = req.files["video"][0];
       const thumbnailFile = req.files["thumbnail"][0];
+
+      // Parse the JSON array of tags
+      const parsedTags = JSON.parse(tags);
 
       // Generate unique filenames for video and thumbnail
       const videoFilename = uuidv4() + "-" + videoFile.originalname;
@@ -67,7 +67,7 @@ router.post(
 
       // Save content metadata to the database
       await db.query(
-        "INSERT INTO content (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, status, accessibility, tags, publish_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+        "INSERT INTO content (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, status, accessibility, tags, publish_time, org_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
         [
           title,
           focus,
@@ -79,8 +79,9 @@ router.post(
           creator_user_uuid,
           status,
           accessibility,
-          tags,
-          publishTime
+          parsedTags, // Use the parsed JSON array of tags
+          publish_time,
+          org_id,
         ]
       );
 
@@ -91,9 +92,6 @@ router.post(
     }
   }
 );
-
-
-
 
 // Route for listing content by creator ID
 router.get("/content/:creatorId", async (req, res) => {
@@ -115,8 +113,6 @@ router.get("/content/:creatorId", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-
 
 // Route for deleting content
 router.delete("/content/delete/:videoId", async (req, res) => {
