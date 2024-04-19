@@ -93,7 +93,7 @@ router.get("/content/:creatorId", async (req, res) => {
 
     // Fetch content from the database for the given creatorId
     const queryResult = await db.query(
-      `SELECT video_id, title, description, focus, s3_video_url, s3_thumbnail, created_at, updated_at, status,
+      `SELECT content_id, title, description, focus, s3_video_url, s3_thumbnail, created_at, updated_at, status,
        creator_user_uuid, creator_name, creator_profile_url, accessibility, tags
        FROM content
        WHERE creator_user_uuid = $1`,
@@ -118,7 +118,7 @@ router.delete("/content/delete/:videoId", async (req, res) => {
 
     // Fetch content metadata including S3 URLs from the database
     const queryResult = await db.query(
-      "SELECT s3_video_url, s3_thumbnail FROM content WHERE video_id = $1",
+      "SELECT s3_video_url, s3_thumbnail FROM content WHERE content_id = $1",
       [videoId]
     );
 
@@ -130,7 +130,7 @@ router.delete("/content/delete/:videoId", async (req, res) => {
     const thumbnailKey = extractS3Key(s3_thumbnail);
 
     // Delete content metadata from the database
-    await db.query("DELETE FROM content WHERE video_id = $1", [videoId]);
+    await db.query("DELETE FROM content WHERE content_id = $1", [videoId]);
 
     // Delete video and thumbnail files from S3
     const deletePromises = Promise.all([
