@@ -41,7 +41,7 @@ router.post(
         creator_name,
         creator_profile_url,
         status,
-        accessibility,
+        accessibility, // Remove the accessibility variable from here
         tags,
         publish_time,
         org_id,
@@ -49,8 +49,9 @@ router.post(
       const videoFile = req.files["video"][0];
       const thumbnailFile = req.files["thumbnail"][0];
 
-      // Parse the JSON array of tags
+      // Parse the JSON arrays
       const parsedTags = JSON.parse(tags);
+      const parsedAccessibility = JSON.parse(accessibility); // Parse accessibility as JSON
 
       // Handle empty string
       const publishTime = publish_time === "" ? null : publish_time;
@@ -90,7 +91,7 @@ router.post(
           creator_profile_url,
           creator_user_uuid,
           status,
-          accessibility,
+          parsedAccessibility, // Store parsedAccessibility as a JSON array
           parsedTags, // Use the parsed JSON array of tags
           publishTime,
           org_id,
@@ -104,6 +105,7 @@ router.post(
     }
   }
 );
+
 
 // Route for listing content by creator ID
 router.get("/content/:creatorId", async (req, res) => {
