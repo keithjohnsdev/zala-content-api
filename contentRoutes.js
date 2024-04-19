@@ -24,7 +24,17 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      const { creator_user_uuid, title, focus, description, creator_name, creator_profile_url, status } = req.body; // Add status to the request body
+      const {
+        creator_user_uuid,
+        title,
+        focus,
+        description,
+        creator_name,
+        creator_profile_url,
+        status,
+        accessibility,
+        tags,
+      } = req.body; // Add accessibility and tags to the request body
       const videoFile = req.files["video"][0];
       const thumbnailFile = req.files["thumbnail"][0];
 
@@ -52,7 +62,7 @@ router.post(
 
       // Save content metadata to the database
       await db.query(
-        "INSERT INTO videos (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+        "INSERT INTO videos (title, focus, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, status, accessibility, tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
         [
           title,
           focus,
@@ -62,7 +72,9 @@ router.post(
           creator_name,
           creator_profile_url,
           creator_user_uuid,
-          status // Add status to the query parameters
+          status,
+          accessibility,
+          tags,
         ]
       );
 
@@ -74,7 +86,6 @@ router.post(
   }
 );
 
-
 // Route for listing content by creator ID
 router.get("/content/:creatorId", async (req, res) => {
   try {
@@ -83,7 +94,7 @@ router.get("/content/:creatorId", async (req, res) => {
     // Fetch content from the database for the given creatorId
     const queryResult = await db.query(
       `SELECT video_id, title, description, focus, s3_video_url, s3_thumbnail, created_at, updated_at, status,
-       creator_user_uuid, creator_name, creator_profile_url
+       creator_user_uuid, creator_name, creator_profile_url, accessibility, tags
        FROM videos
        WHERE creator_user_uuid = $1`,
       [creatorId] // Update the parameter name to creatorId
@@ -99,6 +110,7 @@ router.get("/content/:creatorId", async (req, res) => {
   }
 });
 
+
 // Route for deleting content
 router.delete("/content/delete/:videoId", async (req, res) => {
   try {
@@ -113,23 +125,21 @@ router.delete("/content/delete/:videoId", async (req, res) => {
     // Extract S3 URLs from the query result
     const { s3_video_url, s3_thumbnail } = queryResult.rows[0];
 
-    console.log("S3 Video URL:", s3_video_url);
-    console.log("S3 Thumbnail URL:", s3_thumbnail);
-
     // Extract S3 keys from URLs
     const videoKey = extractS3Key(s3_video_url);
     const thumbnailKey = extractS3Key(s3_thumbnail);
 
     // Delete content metadata from the database
-    await db.query(
-      "DELETE FROM videos WHERE video_id = $1",
-      [videoId]
-    );
+    await db.query("DELETE FROM videos WHERE video_id = $1", [videoId]);
 
     // Delete video and thumbnail files from S3
     const deletePromises = Promise.all([
-      s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: videoKey }).promise(),
-      s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: thumbnailKey }).promise()
+      s3
+        .deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: videoKey })
+        .promise(),
+      s3
+        .deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: thumbnailKey })
+        .promise(),
     ]);
 
     const deleteResults = await deletePromises;
