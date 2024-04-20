@@ -3,6 +3,7 @@ const db = require('./db');
 
 // Schedule the task to run every minute
 cron.schedule('* * * * *', async () => {
+    console.log("schedule function ran")
   try {
     // Query the database for content scheduled for publishing
     const queryResult = await db.query(
