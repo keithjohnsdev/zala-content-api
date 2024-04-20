@@ -62,7 +62,7 @@ router.post(
       // Upload video file to S3
       const videoParams = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: `videos/${creator_user_uuid}/${videoFilename}`,
+        Key: `videos/${creator_user_uuid}/${uuidv4()}-${videoFilename}`,
         Body: videoFile.buffer,
         ContentType: videoFile.mimetype,
       };
@@ -71,7 +71,7 @@ router.post(
       // Upload thumbnail file to S3
       const thumbnailParams = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: `thumbnails/${creator_user_uuid}/${thumbnailFilename}`,
+        Key: `thumbnails/${creator_user_uuid}/${uuidv4()}-${thumbnailFilename}`,
         Body: thumbnailFile.buffer,
         ContentType: thumbnailFile.mimetype,
       };
@@ -254,7 +254,7 @@ router.put(
         // Upload new video file to S3
         const videoParams = {
           Bucket: process.env.S3_BUCKET_NAME,
-          Key: `videos/${creator_user_uuid}/${videoFile.originalname}`, // Use contentId for S3 key
+          Key: `videos/${creator_user_uuid}/${uuidv4()}-${videoFile.originalname}`, // Use contentId for S3 key
           Body: videoFile.buffer,
           ContentType: videoFile.mimetype,
         };
@@ -276,7 +276,7 @@ router.put(
         // Upload new thumbnail file to S3
         const thumbnailParams = {
           Bucket: process.env.S3_BUCKET_NAME,
-          Key: `thumbnails/${creator_user_uuid}/${thumbnailFile.originalname}`, // Use contentId for S3 key
+          Key: `thumbnails/${creator_user_uuid}/${uuidv4()}-${thumbnailFile.originalname}`, // Use contentId for S3 key
           Body: thumbnailFile.buffer,
           ContentType: thumbnailFile.mimetype,
         };
