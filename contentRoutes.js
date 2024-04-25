@@ -126,6 +126,35 @@ router.get("/content/:creatorId", async (req, res) => {
   }
 });
 
+// Route for listing content by multiple superusers
+router.post("/content/bySuperusers", async (req, res) => {
+  try {
+    const { creatorIds } = req.body;
+
+    // Ensure creatorIds is an array
+    if (!Array.isArray(creatorIds)) {
+      return res.status(400).json({ error: "creatorIds must be an array" });
+    }
+
+    // Fetch content from the database for the given creatorIds
+    const queryResult = await db.query(
+      `SELECT * FROM content WHERE creator_user_uuid IN (${creatorIds.map((id, index) => `$${index + 1}`).join(', ')})`,
+      creatorIds
+    );
+
+    // Extract the rows from the query result
+    const contentList = queryResult.rows;
+
+    res.status(200).json(contentList);
+  } catch (error) {
+    console.error("Error fetching content:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+module.exports = router;
+
+
 // Route for deleting content
 router.delete("/content/delete/:videoId", async (req, res) => {
   try {
@@ -325,5 +354,7 @@ router.put(
     }
   }
 );
+
+
 
 module.exports = router;
