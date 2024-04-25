@@ -9,6 +9,9 @@ const router = express.Router();
 // Configure multer for handling multipart/form-data
 const upload = multer();
 
+// Use multer middleware to parse form-data bodies
+app.use(upload.any());
+
 // Configure AWS S3 client
 const s3 = new S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -126,17 +129,15 @@ router.get("/content/:creatorId", async (req, res) => {
   }
 });
 
-// Route for listing content by multiple superusers
-router.post("/content/bySuperusers", async (req, res) => {
+// Route for listing content by superusers
+router.post("/content/bySuperusers", upload.none(), async (req, res) => {
   try {
     const { creatorIds } = req.body;
-    console.log(req.body)
-    console.log(creatorIds)
 
-     // Parse JSON string to array if needed
-     const parsedIds = typeof creatorIds === 'string' ? JSON.parse(creatorIds) : creatorIds;
+    // Parse JSON string to array if needed
+    const parsedIds = typeof creatorIds === 'string' ? JSON.parse(creatorIds) : creatorIds;
 
-    // Ensure creatorIds is an array
+    // Ensure parsedIds is an array
     if (!Array.isArray(parsedIds)) {
       return res.status(400).json({ error: "creatorIds must be an array" });
     }
@@ -156,9 +157,6 @@ router.post("/content/bySuperusers", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-module.exports = router;
-
 
 // Route for deleting content
 router.delete("/content/delete/:videoId", async (req, res) => {
