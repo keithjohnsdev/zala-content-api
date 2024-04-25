@@ -130,20 +130,21 @@ router.get("/content/:creatorId", async (req, res) => {
 router.post("/content/bySuperusers", async (req, res) => {
   try {
     const { creatorIds } = req.body;
+    console.log(req.body)
     console.log(creatorIds)
 
      // Parse JSON string to array if needed
      const parsedIds = typeof creatorIds === 'string' ? JSON.parse(creatorIds) : creatorIds;
-     
+
     // Ensure creatorIds is an array
-    if (!Array.isArray(creatorIds)) {
+    if (!Array.isArray(parsedIds)) {
       return res.status(400).json({ error: "creatorIds must be an array" });
     }
 
     // Fetch content from the database for the given creatorIds
     const queryResult = await db.query(
-      `SELECT * FROM content WHERE creator_user_uuid IN (${creatorIds.map((id, index) => `$${index + 1}`).join(', ')})`,
-      creatorIds
+      `SELECT * FROM content WHERE creator_user_uuid IN (${parsedIds.map((id, index) => `$${index + 1}`).join(', ')})`,
+      parsedIds
     );
 
     // Extract the rows from the query result
