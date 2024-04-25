@@ -130,7 +130,11 @@ router.get("/content/:creatorId", async (req, res) => {
 router.post("/content/bySuperusers", async (req, res) => {
   try {
     const { creatorIds } = req.body;
+    console.log(creatorIds)
 
+     // Parse JSON string to array if needed
+     const parsedIds = typeof creatorIds === 'string' ? JSON.parse(creatorIds) : creatorIds;
+     
     // Ensure creatorIds is an array
     if (!Array.isArray(creatorIds)) {
       return res.status(400).json({ error: "creatorIds must be an array" });
