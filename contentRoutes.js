@@ -9,9 +9,6 @@ const router = express.Router();
 // Configure multer for handling multipart/form-data
 const upload = multer();
 
-// Use multer middleware to parse form-data bodies
-app.use(upload.any());
-
 // Configure AWS S3 client
 const s3 = new S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
