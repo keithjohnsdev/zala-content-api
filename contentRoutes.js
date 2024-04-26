@@ -139,9 +139,9 @@ router.post("/content/bySuperusers", upload.none(), async (req, res) => {
       return res.status(400).json({ error: "creatorIds must be an array" });
     }
 
-    // Fetch content from the database for the given creatorIds
+    // Fetch published content from the database for the given creatorIds
     const queryResult = await db.query(
-      `SELECT * FROM content WHERE creator_user_uuid IN (${parsedIds.map((id, index) => `$${index + 1}`).join(', ')})`,
+      `SELECT * FROM content WHERE creator_user_uuid IN (${parsedIds.map((id, index) => `$${index + 1}`).join(', ')}) AND status = 'published'`,
       parsedIds
     );
 
