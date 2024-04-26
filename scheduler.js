@@ -9,8 +9,8 @@ async function publishContent() {
   try {
     // Query the database for content scheduled for publishing
     const queryResult = await db.query(
-      "SELECT * FROM content WHERE status = $1 AND publish_time <= NOW()",
-      ["scheduled"]
+      "SELECT * FROM content WHERE scheduled = $1 AND scheduled_time <= NOW()",
+      [true]
     );
 
     const scheduledContent = queryResult.rows;
@@ -22,8 +22,8 @@ async function publishContent() {
 
     // Iterate over the scheduled content and update status to "published"
     for (const content of scheduledContent) {
-      await db.query("UPDATE content SET status = $1 WHERE content_id = $2", [
-        "published",
+      await db.query("UPDATE content SET scheduled = $1 WHERE content_id = $2", [
+        false,
         content.content_id,
       ]);
     }
