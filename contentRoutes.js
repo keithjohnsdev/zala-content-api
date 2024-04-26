@@ -38,10 +38,10 @@ router.post(
         description,
         creator_name,
         creator_profile_url,
-        status,
+        scheduled, // Changed from status to scheduled
         accessibility,
         tags,
-        scheduled_time, // Changed from publish_time to scheduled_time
+        scheduled_time,
         org_id,
         zala_library,
       } = req.body;
@@ -53,7 +53,7 @@ router.post(
       const parsedAccessibility = JSON.parse(accessibility); // Parse accessibility as JSON
 
       // Handle empty string
-      const scheduledTime = scheduled_time === "" ? null : scheduled_time; // Changed from publishTime to scheduledTime
+      const scheduledTime = scheduled_time === "" ? null : scheduled_time;
 
       // Get filenames for video and thumbnail
       const videoFilename = videoFile.originalname;
@@ -79,7 +79,7 @@ router.post(
 
       // Save content metadata to the database
       await db.query(
-        "INSERT INTO content (title, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, status, accessibility, tags, scheduled_time, org_id, zala_library) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+        "INSERT INTO content (title, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, scheduled, accessibility, tags, scheduled_time, org_id, zala_library) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
         [
           title,
           description,
@@ -88,10 +88,10 @@ router.post(
           creator_name,
           creator_profile_url,
           creator_user_uuid,
-          status,
-          parsedAccessibility, // Store parsedAccessibility as a JSON array
-          parsedTags, // Use the parsed JSON array of tags
-          scheduledTime, // Changed from publishTime to scheduledTime
+          scheduled, // Changed from status to scheduled
+          parsedAccessibility,
+          parsedTags,
+          scheduledTime,
           org_id,
           zala_library,
         ]
@@ -104,6 +104,7 @@ router.post(
     }
   }
 );
+
 
 
 // Route for listing content by creator ID
