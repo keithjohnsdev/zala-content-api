@@ -41,7 +41,7 @@ router.post(
         status,
         accessibility,
         tags,
-        publish_time,
+        scheduled_time, // Changed from publish_time to scheduled_time
         org_id,
         zala_library,
       } = req.body;
@@ -53,7 +53,7 @@ router.post(
       const parsedAccessibility = JSON.parse(accessibility); // Parse accessibility as JSON
 
       // Handle empty string
-      const publishTime = publish_time === "" ? null : publish_time;
+      const scheduledTime = scheduled_time === "" ? null : scheduled_time; // Changed from publishTime to scheduledTime
 
       // Get filenames for video and thumbnail
       const videoFilename = videoFile.originalname;
@@ -79,7 +79,7 @@ router.post(
 
       // Save content metadata to the database
       await db.query(
-        "INSERT INTO content (title, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, status, accessibility, tags, publish_time, org_id, zala_library) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+        "INSERT INTO content (title, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, status, accessibility, tags, scheduled_time, org_id, zala_library) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
         [
           title,
           description,
@@ -91,7 +91,7 @@ router.post(
           status,
           parsedAccessibility, // Store parsedAccessibility as a JSON array
           parsedTags, // Use the parsed JSON array of tags
-          publishTime,
+          scheduledTime, // Changed from publishTime to scheduledTime
           org_id,
           zala_library,
         ]
@@ -104,6 +104,7 @@ router.post(
     }
   }
 );
+
 
 // Route for listing content by creator ID
 router.get("/content/:creatorId", async (req, res) => {
