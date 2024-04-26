@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 
 // Use cors middleware to handle CORS headers
-app.use(cors());
+// app.use(cors());
 
 // Define routes
 
