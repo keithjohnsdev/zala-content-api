@@ -1,11 +1,15 @@
 const express = require("express");
-const contentRoutes = require('./contentRoutes');
+const contentRoutes = require("./contentRoutes");
+const cors = require("cors");
 
 // Create a new Express application
 const app = express();
 
 // Middleware for parsing JSON bodies
 app.use(express.json());
+
+// Use cors middleware to handle CORS headers
+app.use(cors());
 
 // Define routes
 
@@ -18,7 +22,7 @@ app.get("/status", (req, res) => {
 });
 
 // Mount the content routes
-app.use('/', contentRoutes);
+app.use("/", contentRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000; // Use the provided port or default to 3000
