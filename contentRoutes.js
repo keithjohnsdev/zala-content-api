@@ -396,6 +396,8 @@ router.post("/content/schedule/:contentId", async (req, res) => {
   try {
     const { contentId } = req.params;
     const { scheduled_time } = req.body;
+    console.log(contentId)
+    console.log(scheduled_time)
 
     // Query the database to find the content by contentId
     const queryResult = await db.query(
