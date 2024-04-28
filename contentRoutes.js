@@ -105,8 +105,6 @@ router.post(
   }
 );
 
-
-
 // Route for listing content by creator ID
 router.get("/content/:creatorId", async (req, res) => {
   try {
@@ -134,7 +132,8 @@ router.post("/content/bySuperusers", upload.none(), async (req, res) => {
     const { creatorIds } = req.body;
 
     // Parse JSON string to array if needed
-    const parsedIds = typeof creatorIds === 'string' ? JSON.parse(creatorIds) : creatorIds;
+    const parsedIds =
+      typeof creatorIds === "string" ? JSON.parse(creatorIds) : creatorIds;
 
     // Ensure parsedIds is an array
     if (!Array.isArray(parsedIds)) {
@@ -143,7 +142,9 @@ router.post("/content/bySuperusers", upload.none(), async (req, res) => {
 
     // Fetch published content from the database for the given creatorIds
     const queryResult = await db.query(
-      `SELECT * FROM content WHERE creator_user_uuid IN (${parsedIds.map((id, index) => `$${index + 1}`).join(', ')}) AND status = 'published'`,
+      `SELECT * FROM content WHERE creator_user_uuid IN (${parsedIds
+        .map((id, index) => `$${index + 1}`)
+        .join(", ")}) AND status = 'published'`,
       parsedIds
     );
 
@@ -285,7 +286,9 @@ router.put(
         // Upload new video file to S3
         const videoParams = {
           Bucket: process.env.S3_BUCKET_NAME,
-          Key: `videos/${creator_user_uuid}/${uuidv4()}-${videoFile.originalname}`, // Use contentId for S3 key
+          Key: `videos/${creator_user_uuid}/${uuidv4()}-${
+            videoFile.originalname
+          }`, // Use contentId for S3 key
           Body: videoFile.buffer,
           ContentType: videoFile.mimetype,
         };
@@ -307,7 +310,9 @@ router.put(
         // Upload new thumbnail file to S3
         const thumbnailParams = {
           Bucket: process.env.S3_BUCKET_NAME,
-          Key: `thumbnails/${creator_user_uuid}/${uuidv4()}-${thumbnailFile.originalname}`, // Use contentId for S3 key
+          Key: `thumbnails/${creator_user_uuid}/${uuidv4()}-${
+            thumbnailFile.originalname
+          }`, // Use contentId for S3 key
           Body: thumbnailFile.buffer,
           ContentType: thumbnailFile.mimetype,
         };
@@ -349,7 +354,7 @@ router.put(
         ]
       );
 
-      res.status(200).json({ message: "Content updated successfully" });
+      res.status(200).json({ message: "Content updated" });
     } catch (error) {
       console.error("Error updating content:", error);
       res.status(500).json({ error: "Internal server error" });
@@ -379,13 +384,44 @@ router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
       [false, contentId]
     );
 
-    res.status(200).json({ message: "Content removed from schedule successfully" });
+    res.status(200).json({ message: "Content removed from schedule" });
   } catch (error) {
     console.error("Error removing content from schedule:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
+// Route for scheduling content
+router.post("/content/schedule/:contentId", async (req, res) => {
+  try {
+    const { contentId } = req.params;
+    const { scheduled_time } = req.body;
 
+    // Query the database to find the content by contentId
+    const queryResult = await db.query(
+      "SELECT * FROM content WHERE content_id = $1",
+      [contentId]
+    );
+
+    // Check if content with the provided contentId exists
+    if (queryResult.rows.length === 0) {
+      return res.status(404).json({ error: "Content not found" });
+    }
+
+    // Handle empty time string
+    const scheduledTime = scheduled_time === "" ? null : scheduled_time;
+
+    // Update the content to schedule it with the provided timestamp
+    await db.query(
+      "UPDATE content SET scheduled = $1, scheduled_time = $2 WHERE content_id = $3",
+      [true, scheduledTime, contentId]
+    );
+
+    res.status(200).json({ message: "Content scheduled" });
+  } catch (error) {
+    console.error("Error scheduling content:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 module.exports = router;
