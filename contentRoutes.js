@@ -396,8 +396,8 @@ router.post("/content/schedule/:contentId", async (req, res) => {
   try {
     const { contentId } = req.params;
     const { scheduled_time } = req.body;
-    console.log(contentId)
-    console.log(scheduled_time)
+    console.log(contentId);
+    console.log(scheduled_time);
 
     // Query the database to find the content by contentId
     const queryResult = await db.query(
@@ -411,7 +411,27 @@ router.post("/content/schedule/:contentId", async (req, res) => {
     }
 
     // Handle empty time string
-    const scheduledTime = scheduled_time === "" ? null : scheduled_time;
+    let scheduledTime = null;
+    if (scheduled_time || scheduled_time === "") {
+      return res
+        .status(400)
+        .json({ error: "Publish failed - date not provided" });
+    }
+
+    if (scheduled_time !== "") {
+      // Parse scheduled_time into a Date object
+      const scheduledDate = new Date(scheduled_time);
+      console.log(scheduledDate)
+
+      // Compare scheduled_date with the current date
+      if (scheduledDate <= new Date()) {
+        return res
+          .status(400)
+          .json({ error: "Publish failed - provided date not in the future" });
+      }
+
+      scheduledTime = scheduled_time;
+    }
 
     // Update the content to schedule it with the provided timestamp
     await db.query(
