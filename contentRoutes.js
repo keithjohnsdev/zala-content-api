@@ -392,8 +392,6 @@ router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
   }
 });
 
-const moment = require("moment");
-
 // Route for scheduling content
 router.post(
   "/content/schedule/:contentId",
@@ -402,26 +400,51 @@ router.post(
     try {
       const { contentId } = req.params;
       const { scheduled_time } = req.body;
+      console.log(req.body);
+      console.log(contentId);
+      console.log(scheduled_time);
 
-      // Parse scheduled_time using Moment.js
-      const scheduledDate = moment(scheduled_time);
+      // Query the database to find the content by contentId
+      const queryResult = await db.query(
+        "SELECT * FROM content WHERE content_id = $1",
+        [contentId]
+      );
 
-      // Check if the parsed date is valid
-      if (!scheduledDate.isValid()) {
-        return res.status(400).json({ error: "Invalid date format" });
+      // Check if content with the provided contentId exists
+      if (queryResult.rows.length === 0) {
+        return res.status(404).json({ error: "Content not found" });
       }
 
-      // Compare scheduled_date with the current date
-      if (scheduledDate <= moment()) {
-        return res.status(400).json({
-          error: "Publish failed - provided date not in the future",
-        });
+      // Handle empty time string
+      let scheduledTime = null;
+      if (scheduled_time || scheduled_time === "") {
+        return res
+          .status(400)
+          .json({ error: "Publish failed - date not provided" });
+      }
+
+      if (scheduled_time !== "") {
+        // Parse scheduled_time into a Date object
+        console.log("parsing date string into date")
+        const scheduledDate = new Date(scheduled_time);
+        console.log(scheduledDate);
+
+        // Compare scheduled_date with the current date
+        if (scheduledDate <= new Date()) {
+          return res
+            .status(400)
+            .json({
+              error: "Publish failed - provided date not in the future",
+            });
+        }
+
+        scheduledTime = scheduled_time;
       }
 
       // Update the content to schedule it with the provided timestamp
       await db.query(
         "UPDATE content SET scheduled = $1, scheduled_time = $2 WHERE content_id = $3",
-        [true, scheduledDate.toISOString(), contentId]
+        [true, scheduledTime, contentId]
       );
 
       res.status(200).json({ message: "Content scheduled" });
@@ -431,6 +454,5 @@ router.post(
     }
   }
 );
-
 
 module.exports = router;
