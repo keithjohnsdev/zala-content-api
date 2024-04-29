@@ -417,7 +417,7 @@ router.post(
 
       // Handle empty time string
       let scheduledTime = null;
-      if (scheduled_time || scheduled_time === "") {
+      if (!scheduled_time || scheduled_time === "") {
         return res
           .status(400)
           .json({ error: "Publish failed - date not provided" });
