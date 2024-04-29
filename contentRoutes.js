@@ -396,6 +396,7 @@ router.post("/content/schedule/:contentId", async (req, res) => {
   try {
     const { contentId } = req.params;
     const { scheduled_time } = req.body;
+    console.log(req.body)
     console.log(contentId);
     console.log(scheduled_time);
 
