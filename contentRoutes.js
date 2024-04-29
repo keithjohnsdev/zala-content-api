@@ -47,6 +47,7 @@ router.post(
       } = req.body;
       const videoFile = req.files["video"][0];
       const thumbnailFile = req.files["thumbnail"][0];
+      console.log(req.body)
 
       // Parse the JSON arrays
       const parsedTags = JSON.parse(tags);
