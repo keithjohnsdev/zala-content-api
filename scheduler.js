@@ -20,12 +20,15 @@ async function publishContent() {
       `Scheduler - found ${scheduledContent.length} items ready to publish`
     );
 
-    // Iterate over the scheduled content and update status to "published"
+    // Iterate over the scheduled content, update scheduled to false, and add current timestamp to posted array
     for (const content of scheduledContent) {
-      await db.query("UPDATE content SET scheduled = $1 WHERE content_id = $2", [
-        false,
-        content.content_id,
-      ]);
+      const currentTimestamp = new Date().toISOString(); // Get the current timestamp
+      const updatedPostedArray = [...content.posted, currentTimestamp]; // Append current timestamp to the posted array
+
+      await db.query(
+        "UPDATE content SET scheduled = $1, posted = $2 WHERE content_id = $3",
+        [false, updatedPostedArray, content.content_id]
+      );
     }
 
     console.log("Content publishing task executed successfully.");
