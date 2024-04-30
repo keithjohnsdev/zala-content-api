@@ -36,8 +36,5 @@ async function publishContent() {
   }
 }
 
-// Export the function to be invoked externally
-export default publishContent;
-
 // Invoke the function immediately when the script is executed
 publishContent();
