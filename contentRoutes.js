@@ -109,12 +109,12 @@ router.post(
 // Route for listing content by creator ID
 router.get("/content/:creatorId", async (req, res) => {
   try {
-    const { creatorId } = req.params; // Use req.params instead of req.query
+    const { creatorId } = req.params;
 
-    // Fetch content from the database for the given creatorId
+    // Fetch content from the database for the given creatorId and sort by content_id descending
     const queryResult = await db.query(
-      `SELECT * FROM content WHERE creator_user_uuid = $1`,
-      [creatorId] // Update the parameter name to creatorId
+      `SELECT * FROM content WHERE creator_user_uuid = $1 ORDER BY content_id DESC`,
+      [creatorId]
     );
 
     // Extract the rows from the query result
