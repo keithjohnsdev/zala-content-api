@@ -1,4 +1,3 @@
-// Import required modules and setup database connection
 const db = require("./db");
 
 // Define the function to perform content publishing task
@@ -6,7 +5,7 @@ async function publishContent() {
   console.log("Schedule function ran");
   try {
     // Query the database for content scheduled for publishing
-    const queryResult = await query(
+    const queryResult = await db.query(
       "SELECT * FROM content WHERE scheduled = $1 AND scheduled_time <= NOW()",
       [true]
     );
