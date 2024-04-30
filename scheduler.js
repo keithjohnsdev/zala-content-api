@@ -1,14 +1,12 @@
-// contentPublishingTask.js
-
 // Import required modules and setup database connection
-const db = require("./db");
+import { query } from "./db";
 
 // Define the function to perform content publishing task
 async function publishContent() {
   console.log("Schedule function ran");
   try {
     // Query the database for content scheduled for publishing
-    const queryResult = await db.query(
+    const queryResult = await query(
       "SELECT * FROM content WHERE scheduled = $1 AND scheduled_time <= NOW()",
       [true]
     );
@@ -20,10 +18,11 @@ async function publishContent() {
       `Scheduler - found ${scheduledContent.length} items ready to publish`
     );
 
-    // Iterate over the scheduled content, update scheduled to false, and add current timestamp to posted array
+    // Iterate over the scheduled content and update status to "published"
     for (const content of scheduledContent) {
       const currentTimestamp = new Date().toISOString(); // Get the current timestamp
-      const updatedPostedArray = [...content.posted, currentTimestamp]; // Append current timestamp to the posted array
+      const updatedPostedArray = content.posted || []; // Initialize as empty array if null or undefined
+      updatedPostedArray.push(currentTimestamp); // Append current timestamp to the array
 
       await db.query(
         "UPDATE content SET scheduled = $1, posted = $2 WHERE content_id = $3",
@@ -38,7 +37,7 @@ async function publishContent() {
 }
 
 // Export the function to be invoked externally
-module.exports = publishContent;
+export default publishContent;
 
 // Invoke the function immediately when the script is executed
 publishContent();
