@@ -1,5 +1,5 @@
 // Import required modules and setup database connection
-import { query } from "./db";
+const db = require("./db");
 
 // Define the function to perform content publishing task
 async function publishContent() {
