@@ -38,7 +38,7 @@ router.post(
         description,
         creator_name,
         creator_profile_url,
-        scheduled, // Changed from status to scheduled
+        scheduled,
         accessibility,
         tags,
         scheduled_time,
@@ -261,16 +261,9 @@ router.put(
         creator_user_uuid,
         title,
         description,
-        creator_name,
-        creator_profile_url,
-        status,
         accessibility,
         tags,
-        publish_time,
-        org_id,
         zala_library,
-        new_video,
-        new_thumbnail,
       } = req.body;
       const videoFile = req.files["video"] ? req.files["video"][0] : false;
       const thumbnailFile = req.files["thumbnail"]
@@ -280,9 +273,6 @@ router.put(
       // Parse the JSON arrays
       const parsedTags = JSON.parse(tags);
       const parsedAccessibility = JSON.parse(accessibility); // Parse accessibility as JSON
-
-      // Handle empty string
-      const publishTime = publish_time === "" ? null : publish_time;
 
       // Fetch existing content data from the database
       const existingContent = await db.query(
@@ -347,20 +337,14 @@ router.put(
       await db.query(
         `UPDATE content 
        SET title = $1, description = $2, s3_video_url = $3, s3_thumbnail = $4, 
-           creator_name = $5, creator_profile_url = $6, status = $7, 
-           tags = $8, publish_time = $9, org_id = $10, zala_library = $11, accessibility = $12
-       WHERE content_id = $13`,
+           tags = $5, zala_library = $6, accessibility = $7
+       WHERE content_id = $8`,
         [
           title,
           description,
           newVideoUrl,
           newThumbnailUrl,
-          creator_name,
-          creator_profile_url,
-          status,
           parsedTags,
-          publishTime,
-          org_id,
           zala_library,
           parsedAccessibility,
           contentId, // Update the content with the specified contentId
