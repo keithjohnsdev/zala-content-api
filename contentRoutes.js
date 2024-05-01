@@ -283,9 +283,9 @@ router.put(
       // Extract existing S3 URLs
       const { s3_video_url, s3_thumbnail } = existingContent.rows[0];
 
-      // Handle video upload if new_video is true and there is a videoFile
+      // Handle video upload if videoFile is true and there is a videoFile
       let newVideoUrl = s3_video_url;
-      if (new_video === "true" && videoFile) {
+      if (videoFile) {
         // Upload new video file to S3
         const videoParams = {
           Bucket: process.env.S3_BUCKET_NAME,
