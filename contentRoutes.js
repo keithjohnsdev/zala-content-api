@@ -307,9 +307,9 @@ router.put(
           .promise();
       }
 
-      // Handle thumbnail upload if new_thumbnail is true
+      // Handle thumbnail upload if thumbnailFile is true
       let newThumbnailUrl = s3_thumbnail;
-      if (new_thumbnail === "true" && thumbnailFile) {
+      if (thumbnailFile) {
         // Upload new thumbnail file to S3
         const thumbnailParams = {
           Bucket: process.env.S3_BUCKET_NAME,
