@@ -261,6 +261,7 @@ router.put(
         creator_user_uuid,
         title,
         description,
+        description_markup,
         accessibility,
         tags,
         zala_library,
@@ -271,6 +272,7 @@ router.put(
         : false;
 
       // Parse the JSON arrays
+      console.log(tags)
       const parsedTags = JSON.parse(tags);
       const parsedAccessibility = JSON.parse(accessibility); // Parse accessibility as JSON
 
@@ -336,12 +338,13 @@ router.put(
       // Update content metadata in the database
       await db.query(
         `UPDATE content 
-       SET title = $1, description = $2, s3_video_url = $3, s3_thumbnail = $4, 
-           tags = $5, zala_library = $6, accessibility = $7
-       WHERE content_id = $8`,
+       SET title = $1, description = $2, description_markup = $3, s3_video_url = $4, s3_thumbnail = $5, 
+           tags = $6, zala_library = $7, accessibility = $8
+       WHERE content_id = $9`,
         [
           title,
           description,
+          description_markup,
           newVideoUrl,
           newThumbnailUrl,
           parsedTags,
