@@ -339,7 +339,7 @@ router.put(
         `UPDATE content 
        SET title = $1, description = $2, description_markup = $3, s3_video_url = $4, s3_thumbnail = $5, 
            tags = $6, zala_library = $7, accessibility = $8, 
-           updated_at = NOW(),
+           updated_at = NOW()
        WHERE content_id = $9`,
         [
           title,
