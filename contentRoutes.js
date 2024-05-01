@@ -272,7 +272,6 @@ router.put(
         : false;
 
       // Parse the JSON arrays
-      console.log(tags)
       const parsedTags = JSON.parse(tags);
       const parsedAccessibility = JSON.parse(accessibility); // Parse accessibility as JSON
 
@@ -339,7 +338,8 @@ router.put(
       await db.query(
         `UPDATE content 
        SET title = $1, description = $2, description_markup = $3, s3_video_url = $4, s3_thumbnail = $5, 
-           tags = $6, zala_library = $7, accessibility = $8
+           tags = $6, zala_library = $7, accessibility = $8, 
+           updated_at = NOW(),
        WHERE content_id = $9`,
         [
           title,
