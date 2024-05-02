@@ -448,14 +448,14 @@ router.post(
 );
 
 // Route for liking content
-router.post('/content/like/:contentId', async (req, res) => {
+router.post('/content/like/:contentId', upload.fields([]), async (req, res) => {
   try {
       const { contentId } = req.params;
       const { userId } = req.body;
 
       // Check if the user exists
       const userQuery = await db.query(
-          `SELECT user_uuid FROM users WHERE user_uuid = $1`,
+          `SELECT * FROM users WHERE user_uuid = $1`,
           [userId]
       );
 
