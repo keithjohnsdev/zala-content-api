@@ -448,7 +448,7 @@ router.post(
 );
 
 // Route for liking content
-router.post("/content/like/:contentId", async (req, res) => {
+router.post("/content/like/:contentId",  upload.fields([]), async (req, res) => {
   try {
     const { contentId } = req.params;
     const { userId } = req.body;
