@@ -447,4 +447,102 @@ router.post(
   }
 );
 
+// Route for liking content
+router.post("/content/like/:contentId", async (req, res) => {
+  try {
+    const { contentId } = req.params;
+    const { userId } = req.body;
+
+    // Check if the user has already liked or disliked the content
+    const userLikesQuery = await db.query(
+      `SELECT likes, dislikes FROM users WHERE user_uuid = $1`,
+      [userId]
+    );
+
+    const { likes, dislikes } = userLikesQuery.rows[0];
+    const likedContentIds = likes || [];
+    const dislikedContentIds = dislikes || [];
+
+    // If the contentId is already in the dislikes array, decrement dislikes and remove it from dislikes array
+    if (dislikedContentIds.includes(contentId)) {
+      await db.query(
+        `UPDATE content SET dislikes = dislikes - 1 WHERE content_id = $1`,
+        [contentId]
+      );
+
+      await db.query(
+        `UPDATE users SET dislikes = array_remove(dislikes, $1) WHERE user_uuid = $2`,
+        [contentId, userId]
+      );
+    }
+
+    // If the contentId is not in the likes array, increment likes and add it to likes array
+    if (!likedContentIds.includes(contentId)) {
+      await db.query(
+        `UPDATE content SET likes = likes + 1 WHERE content_id = $1`,
+        [contentId]
+      );
+
+      await db.query(
+        `UPDATE users SET likes = array_append(likes, $1) WHERE user_uuid = $2`,
+        [contentId, userId]
+      );
+    }
+
+    res.status(200).json({ message: "Content liked" });
+  } catch (error) {
+    console.error("Error liking content:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Route for disliking content
+router.post("/content/dislike/:contentId", async (req, res) => {
+  try {
+    const { contentId } = req.params;
+    const { userId } = req.body;
+
+    // Check if the user has already liked or disliked the content
+    const userLikesQuery = await db.query(
+      `SELECT likes, dislikes FROM users WHERE user_uuid = $1`,
+      [userId]
+    );
+
+    const { likes, dislikes } = userLikesQuery.rows[0];
+    const likedContentIds = likes || [];
+    const dislikedContentIds = dislikes || [];
+
+    // If the contentId is already in the likes array, decrement likes and remove it from likes array
+    if (likedContentIds.includes(contentId)) {
+      await db.query(
+        `UPDATE content SET likes = likes - 1 WHERE content_id = $1`,
+        [contentId]
+      );
+
+      await db.query(
+        `UPDATE users SET likes = array_remove(likes, $1) WHERE user_uuid = $2`,
+        [contentId, userId]
+      );
+    }
+
+    // If the contentId is not in the dislikes array, increment dislikes and add it to dislikes array
+    if (!dislikedContentIds.includes(contentId)) {
+      await db.query(
+        `UPDATE content SET dislikes = dislikes + 1 WHERE content_id = $1`,
+        [contentId]
+      );
+
+      await db.query(
+        `UPDATE users SET dislikes = array_append(dislikes, $1) WHERE user_uuid = $2`,
+        [contentId, userId]
+      );
+    }
+
+    res.status(200).json({ message: "Content disliked" });
+  } catch (error) {
+    console.error("Error disliking content:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 module.exports = router;
