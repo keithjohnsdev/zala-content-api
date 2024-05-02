@@ -448,20 +448,34 @@ router.post(
 );
 
 // Route for liking content
-router.post("/content/like/:contentId", async (req, res) => {
+router.post('/content/like/:contentId', async (req, res) => {
   try {
-    const { contentId } = req.params;
-    const { userId } = req.body;
+      const { contentId } = req.params;
+      const { userId } = req.body;
 
-    // Check if the user has already liked or disliked the content
-    const userLikesQuery = await db.query(
-      `SELECT likes, dislikes FROM users WHERE user_uuid = $1`,
-      [userId]
-    );
+      // Check if the user exists
+      const userQuery = await db.query(
+          `SELECT user_uuid FROM users WHERE user_uuid = $1`,
+          [userId]
+      );
 
-    const { likes, dislikes } = userLikesQuery.rows[0];
-    const likedContentIds = likes || [];
-    const dislikedContentIds = dislikes || [];
+      if (userQuery.rows.length === 0) {
+          return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if the user has already liked or disliked the content
+      const userLikesQuery = await db.query(
+          `SELECT likes, dislikes FROM users WHERE user_uuid = $1`,
+          [userId]
+      );
+
+      if (userLikesQuery.rows.length === 0) {
+          return res.status(404).json({ error: "User likes/dislikes not found" });
+      }
+
+      const { likes, dislikes } = userLikesQuery.rows[0];
+      const likedContentIds = likes || [];
+      const dislikedContentIds = dislikes || [];
 
     // If the contentId is already in the dislikes array, decrement dislikes and remove it from dislikes array
     if (dislikedContentIds.includes(contentId)) {
