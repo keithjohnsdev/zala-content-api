@@ -39,7 +39,7 @@ async function publishContent() {
       if (currentPostsArray && currentPostsArray.length > 0) {
         // If the posts array is not null or empty, append to it
         updateContentQuery =
-          "UPDATE content SET scheduled = $1, posts = array_append(posts, $2) WHERE content_id = $3";
+          "UPDATE content SET scheduled = $1, posts = array_append(posts, CAST($2 AS INTEGER)) WHERE content_id = $3";
         updateContentParams = [false, postId, content.content_id];
       } else {
         // If the posts array is null or empty, initialize it with the post_id

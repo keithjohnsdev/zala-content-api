@@ -410,26 +410,51 @@ router.post(
         [true, scheduledTime, contentId]
       );
 
+      let postId;
+
       if (!queryResult.rows[0].scheduled) {
-        // Insert a new row into the posts table
-        await db.query(
-          `INSERT INTO posts (content_id, post_time, creator_user_uuid, scheduled, accessibility)
-        VALUES ($1, $2, $3, $4, $5)`,
-          [
-            queryResult.rows[0].content_id,
-            scheduledTime,
-            queryResult.rows[0].creator_user_uuid,
-            true,
-            queryResult.rows[0].accessibility,
-          ]
-        );
+        try {
+          // Begin a transaction
+          await db.query("BEGIN");
+
+          // Insert a new row into the posts table and retrieve the generated post_id
+          const insertedPost = await db.query(
+            `INSERT INTO posts (content_id, post_time, creator_user_uuid, scheduled, accessibility)
+                VALUES ($1, $2, $3, $4, $5)
+                RETURNING post_id`,
+            [
+              queryResult.rows[0].content_id,
+              scheduledTime,
+              queryResult.rows[0].creator_user_uuid,
+              true,
+              queryResult.rows[0].accessibility,
+            ]
+          );
+
+          postId = insertedPost.rows[0].post_id;
+
+          // Append the post_id to the "posts" column of the content table
+          await db.query(
+            `UPDATE content SET posts = array_append(posts, $1) WHERE content_id = $2`,
+            [postId, queryResult.rows[0].content_id]
+          );
+
+          // Commit the transaction
+          await db.query("COMMIT");
+        } catch (error) {
+          // Rollback the transaction if an error occurs
+          await db.query("ROLLBACK");
+          throw error;
+        }
       } else {
         // Find the row on posts table by postId and update post_time
-        console.log("already scheduled, updating post item instead of making new one")
-        console.log(`post id: ${queryResult.rows[0].post_id}`)
+        console.log(
+          "already scheduled, updating post item instead of making new one"
+        );
+        console.log(`post id: ${postId}`);
         await db.query("UPDATE posts SET post_time = $1 WHERE post_id = $2", [
           scheduledTime,
-          queryResult.rows[0].post_id,
+          postId,
         ]);
       }
 
