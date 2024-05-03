@@ -362,7 +362,7 @@ router.put(
   }
 );
 
-// Route for scheduling content
+// Route for scheduling content post
 router.post(
   "/content/schedule/:contentId",
   upload.fields([]),
@@ -419,15 +419,41 @@ router.post(
 
           // Insert a new row into the posts table and retrieve the generated post_id
           const insertedPost = await db.query(
-            `INSERT INTO posts (content_id, post_time, creator_user_uuid, scheduled, accessibility)
-                VALUES ($1, $2, $3, $4, $5)
-                RETURNING post_id`,
+            `INSERT INTO posts (
+                content_id, 
+                post_time, 
+                creator_user_uuid, 
+                scheduled, 
+                accessibility,
+                title,
+                description,
+                s3_video_url,
+                s3_thumbnail,
+                creator_name,
+                creator_profile_url,
+                tags,
+                org_id,
+                zala_library,
+                description_markup
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            RETURNING post_id`,
             [
               queryResult.rows[0].content_id,
               scheduledTime,
               queryResult.rows[0].creator_user_uuid,
               true,
               queryResult.rows[0].accessibility,
+              queryResult.rows[0].title,
+              queryResult.rows[0].description,
+              queryResult.rows[0].s3_video_url,
+              queryResult.rows[0].s3_thumbnail,
+              queryResult.rows[0].creator_name,
+              queryResult.rows[0].creator_profile_url,
+              queryResult.rows[0].tags,
+              queryResult.rows[0].org_id,
+              queryResult.rows[0].zala_library,
+              queryResult.rows[0].description_markup,
             ]
           );
 
@@ -477,7 +503,7 @@ router.post(
   }
 );
 
-// Route for removing content from the schedule
+// Route for removing post from the schedule
 router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
   try {
     const { contentId } = req.params;
@@ -527,7 +553,7 @@ router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
   }
 });
 
-// Route for liking content
+// Route for liking post
 router.post("/content/like/:postId", upload.fields([]), async (req, res) => {
   try {
     const { postId } = req.params;
@@ -579,7 +605,7 @@ router.post("/content/like/:postId", upload.fields([]), async (req, res) => {
   }
 });
 
-// Route for disliking content
+// Route for disliking post
 router.post("/content/dislike/:postId", upload.fields([]), async (req, res) => {
   try {
     const { postId } = req.params;
