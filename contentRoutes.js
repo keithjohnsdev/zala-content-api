@@ -447,15 +447,26 @@ router.post(
           throw error;
         }
       } else {
-        // Find the row on posts table by postId and update post_time
-        console.log(
-          "already scheduled, updating post item instead of making new one"
-        );
-        console.log(`post id: ${postId}`);
-        await db.query("UPDATE posts SET post_time = $1 WHERE post_id = $2", [
-          scheduledTime,
-          postId,
-        ]);
+        try {
+          // Begin a transaction
+          await db.query("BEGIN");
+
+          // Iterate over the posts array from the content table
+          for (const postId of queryResult.rows[0].posts) {
+            // Update the post_time for the corresponding post_id in the posts table
+            await db.query(
+              `UPDATE posts SET post_time = $1 WHERE post_id = $2 AND scheduled = true`,
+              [scheduledTime, postId]
+            );
+          }
+
+          // Commit the transaction
+          await db.query("COMMIT");
+        } catch (error) {
+          // Rollback the transaction if an error occurs
+          await db.query("ROLLBACK");
+          throw error;
+        }
       }
 
       res.status(200).json({ message: "Content scheduled" });
