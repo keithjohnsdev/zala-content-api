@@ -1,5 +1,6 @@
 const express = require("express");
 const contentRoutes = require("./contentRoutes");
+const postRoutes = require("./postRoutes");
 const cors = require("cors");
 
 // Create a new Express application
@@ -23,6 +24,9 @@ app.get("/status", (req, res) => {
 
 // Mount the content routes
 app.use("/", contentRoutes);
+
+// Mount the post routes
+app.use("/", postRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000; // Use the provided port or default to 3000

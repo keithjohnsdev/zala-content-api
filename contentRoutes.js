@@ -99,7 +99,7 @@ router.post(
           description_markup,
         ]
       );
-      
+
       const contentId = result.rows[0].content_id;
 
       let postId;
@@ -488,24 +488,24 @@ router.post(
           // Insert a new row into the posts table and retrieve the generated post_id
           const insertedPost = await db.query(
             `INSERT INTO posts (
-                content_id, 
-                post_time, 
-                creator_user_uuid, 
-                scheduled, 
-                accessibility,
-                title,
-                description,
-                s3_video_url,
-                s3_thumbnail,
-                creator_name,
-                creator_profile_url,
-                tags,
-                org_id,
-                zala_library,
-                description_markup
-            )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-            RETURNING post_id`,
+                  content_id, 
+                  post_time, 
+                  creator_user_uuid, 
+                  scheduled, 
+                  accessibility,
+                  title,
+                  description,
+                  s3_video_url,
+                  s3_thumbnail,
+                  creator_name,
+                  creator_profile_url,
+                  tags,
+                  org_id,
+                  zala_library,
+                  description_markup
+              )
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+              RETURNING post_id`,
             [
               queryResult.rows[0].content_id,
               scheduledTime,
@@ -617,151 +617,6 @@ router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
     res.status(200).json({ message: "Content removed from schedule" });
   } catch (error) {
     console.error("Error removing content from schedule:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Route for liking post
-router.post("/content/like/:postId", upload.fields([]), async (req, res) => {
-  try {
-    const { postId } = req.params;
-    const { userId } = req.body;
-
-    // Convert postId to integer
-    const postIdInt = parseInt(postId);
-
-    // Check if the user has already liked or disliked the post
-    const userLikesQuery = await db.query(
-      `SELECT likes, dislikes FROM users WHERE user_uuid = $1`,
-      [userId]
-    );
-
-    const { likes, dislikes } = userLikesQuery.rows[0];
-    const likedPostIds = likes || [];
-    const dislikedPostIds = dislikes || [];
-
-    // If the postId is already in the dislikes array, decrement dislikes and remove it from dislikes array
-    if (dislikedPostIds.includes(postIdInt)) {
-      await db.query(
-        `UPDATE posts SET dislikes = COALESCE(dislikes, 0) - 1 WHERE post_id = $1`,
-        [postIdInt]
-      );
-
-      await db.query(
-        `UPDATE users SET dislikes = array_remove(dislikes, $1) WHERE user_uuid = $2`,
-        [postIdInt, userId]
-      );
-    }
-
-    // If the postId is not in the likes array, increment likes and add it to likes array
-    if (!likedPostIds.includes(postIdInt)) {
-      await db.query(
-        `UPDATE posts SET likes = COALESCE(likes, 0) + 1 WHERE post_id = $1`,
-        [postIdInt]
-      );
-
-      await db.query(
-        `UPDATE users SET likes = array_append(likes, $1) WHERE user_uuid = $2`,
-        [postIdInt, userId]
-      );
-    }
-
-    res.status(200).json({ message: "Post liked" });
-  } catch (error) {
-    console.error("Error liking post:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Route for disliking post
-router.post("/content/dislike/:postId", upload.fields([]), async (req, res) => {
-  try {
-    const { postId } = req.params;
-    const { userId } = req.body;
-
-    // Convert postId to integer
-    const postIdInt = parseInt(postId);
-
-    // Check if the user has already liked or disliked the post
-    const userLikesQuery = await db.query(
-      `SELECT likes, dislikes FROM users WHERE user_uuid = $1`,
-      [userId]
-    );
-
-    const { likes, dislikes } = userLikesQuery.rows[0];
-    const likedPostIds = likes || [];
-    const dislikedPostIds = dislikes || [];
-
-    // If the postId is already in the likes array, decrement likes and remove it from likes array
-    if (likedPostIds.includes(postIdInt)) {
-      await db.query(
-        `UPDATE posts SET likes = COALESCE(likes, 0) - 1 WHERE post_id = $1`,
-        [postIdInt]
-      );
-
-      await db.query(
-        `UPDATE users SET likes = array_remove(likes, $1) WHERE user_uuid = $2`,
-        [postIdInt, userId]
-      );
-    }
-
-    // If the postId is not in the dislikes array, increment dislikes and add it to dislikes array
-    if (!dislikedPostIds.includes(postIdInt)) {
-      await db.query(
-        `UPDATE posts SET dislikes = COALESCE(dislikes, 0) + 1 WHERE post_id = $1`,
-        [postIdInt]
-      );
-
-      await db.query(
-        `UPDATE users SET dislikes = array_append(dislikes, $1) WHERE user_uuid = $2`,
-        [postIdInt, userId]
-      );
-    }
-
-    res.status(200).json({ message: "Post disliked" });
-  } catch (error) {
-    console.error("Error disliking post:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Route for handling post views
-router.post("/content/view/:postId", upload.fields([]), async (req, res) => {
-  try {
-    const { postId } = req.params;
-    const { userId } = req.body;
-
-    // Convert postId to integer
-    const postIdInt = parseInt(postId);
-
-    // Check if the user has already viewed the post
-    const userViewsQuery = await db.query(
-      `SELECT views FROM users WHERE user_uuid = $1`,
-      [userId]
-    );
-
-    const { views } = userViewsQuery.rows[0];
-    const viewedPostIds = views || [];
-
-    // If the postId is not in the views array, increment views for the post
-    if (!viewedPostIds.includes(postIdInt)) {
-      await db.query(
-        `UPDATE posts SET views = COALESCE(views, 0) + 1 WHERE post_id = $1`,
-        [postIdInt]
-      );
-
-      // Update views array for the user
-      await db.query(
-        `UPDATE users SET views = array_append(views, $1) WHERE user_uuid = $2`,
-        [postIdInt, userId]
-      );
-
-      res.status(200).json({ message: "Post viewed" });
-    } else {
-      res.status(200).json({ message: "Post already viewed" });
-    }
-  } catch (error) {
-    console.error("Error handling post view:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
