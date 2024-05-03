@@ -493,6 +493,18 @@ router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
       return res.status(404).json({ error: "Content not found" });
     }
 
+    // Retrieve the posts array from the content table
+    const postsArray = queryResult.rows[0].posts;
+
+    // Iterate over each postId in the posts array
+    for (const postId of postsArray) {
+      // Execute a DELETE query on the posts table
+      await db.query(
+        "DELETE FROM posts WHERE post_id = $1 AND scheduled = $2",
+        [postId, true]
+      );
+    }
+
     // Update the content to remove it from the schedule
     await db.query(
       "UPDATE content SET scheduled = $1, scheduled_time = NULL WHERE content_id = $2",
@@ -505,6 +517,7 @@ router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 // Route for liking content
 router.post("/content/like/:contentId", upload.fields([]), async (req, res) => {
