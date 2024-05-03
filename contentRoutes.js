@@ -527,8 +527,6 @@ router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
   }
 });
 
-
-
 // Route for liking content
 router.post("/content/like/:postId", upload.fields([]), async (req, res) => {
   try {
@@ -580,7 +578,6 @@ router.post("/content/like/:postId", upload.fields([]), async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 // Route for disliking content
 router.post("/content/dislike/:postId", upload.fields([]), async (req, res) => {
@@ -634,44 +631,43 @@ router.post("/content/dislike/:postId", upload.fields([]), async (req, res) => {
   }
 });
 
-
-// Route for handling content views
-router.post("/content/view/:contentId", upload.fields([]), async (req, res) => {
+// Route for handling post views
+router.post("/content/view/:postId", upload.fields([]), async (req, res) => {
   try {
-    const { contentId } = req.params;
+    const { postId } = req.params;
     const { userId } = req.body;
 
-    // Convert contentId to integer
-    const contentIdInt = parseInt(contentId);
+    // Convert postId to integer
+    const postIdInt = parseInt(postId);
 
-    // Check if the user has already viewed the content
+    // Check if the user has already viewed the post
     const userViewsQuery = await db.query(
       `SELECT views FROM users WHERE user_uuid = $1`,
       [userId]
     );
 
     const { views } = userViewsQuery.rows[0];
-    const viewedContentIds = views || [];
+    const viewedPostIds = views || [];
 
-    // If the contentId is not in the views array, increment views for the content
-    if (!viewedContentIds.includes(contentIdInt)) {
+    // If the postId is not in the views array, increment views for the post
+    if (!viewedPostIds.includes(postIdInt)) {
       await db.query(
-        `UPDATE content SET views = views + 1 WHERE content_id = $1`,
-        [contentIdInt]
+        `UPDATE posts SET views = COALESCE(views, 0) + 1 WHERE post_id = $1`,
+        [postIdInt]
       );
 
       // Update views array for the user
       await db.query(
         `UPDATE users SET views = array_append(views, $1) WHERE user_uuid = $2`,
-        [contentIdInt, userId]
+        [postIdInt, userId]
       );
 
-      res.status(200).json({ message: "Content viewed" });
+      res.status(200).json({ message: "Post viewed" });
     } else {
-      res.status(200).json({ message: "Content already viewed" });
+      res.status(200).json({ message: "Post already viewed" });
     }
   } catch (error) {
-    console.error("Error handling content view:", error);
+    console.error("Error handling post view:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
