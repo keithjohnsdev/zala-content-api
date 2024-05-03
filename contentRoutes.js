@@ -80,8 +80,8 @@ router.post(
       const thumbnailUploadResult = await s3.upload(thumbnailParams).promise();
 
       // Save content metadata to the database
-      await db.query(
-        "INSERT INTO content (title, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, scheduled, accessibility, tags, scheduled_time, org_id, zala_library, description_markup) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)",
+      const result = await db.query(
+        "INSERT INTO content (title, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, scheduled, accessibility, tags, scheduled_time, org_id, zala_library, description_markup) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING content_id",
         [
           title,
           description,
@@ -96,9 +96,75 @@ router.post(
           scheduledTime,
           org_id,
           zala_library,
-          description_markup
+          description_markup,
         ]
       );
+      
+      const contentId = result.rows[0].content_id;
+
+      let postId;
+
+      if (scheduled) {
+        try {
+          // Begin a transaction
+          await db.query("BEGIN");
+
+          // Insert a new row into the posts table and retrieve the generated post_id
+          const insertedPost = await db.query(
+            `INSERT INTO posts (
+                content_id, 
+                post_time, 
+                creator_user_uuid, 
+                scheduled, 
+                accessibility,
+                title,
+                description,
+                s3_video_url,
+                s3_thumbnail,
+                creator_name,
+                creator_profile_url,
+                tags,
+                org_id,
+                zala_library,
+                description_markup
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            RETURNING post_id`,
+            [
+              contentId,
+              scheduledTime,
+              creator_user_uuid,
+              true,
+              accessibility,
+              title,
+              description,
+              videoUploadResult.Location,
+              thumbnailUploadResult.Location,
+              creator_name,
+              creator_profile_url,
+              tags,
+              org_id,
+              zala_library,
+              description_markup,
+            ]
+          );
+
+          postId = insertedPost.rows[0].post_id;
+
+          // Append the post_id to the "posts" column of the content table
+          await db.query(
+            `UPDATE content SET posts = array_append(posts, $1) WHERE content_id = $2`,
+            [postId, contentId]
+          );
+
+          // Commit the transaction
+          await db.query("COMMIT");
+        } catch (error) {
+          // Rollback the transaction if an error occurs
+          await db.query("ROLLBACK");
+          throw error;
+        }
+      }
 
       res.status(201).json({ message: "Content created successfully" });
     } catch (error) {
