@@ -425,6 +425,8 @@ router.post(
         );
       } else {
         // Find the row on posts table by postId and update post_time
+        console.log("already scheduled, updating post item instead of making new one")
+        console.log(`post id: ${queryResult.rows[0].post_id}`)
         await db.query("UPDATE posts SET post_time = $1 WHERE post_id = $2", [
           scheduledTime,
           queryResult.rows[0].post_id,

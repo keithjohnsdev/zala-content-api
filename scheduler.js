@@ -28,7 +28,10 @@ async function publishContent() {
       );
 
       // Extract the posts array from the query result and convert it to integer array
-      const currentPostsArray = contentQueryResult.rows[0].posts.map(Number);
+      let currentPostsArray = [];
+      if (contentQueryResult.rows[0].posts) {
+        currentPostsArray = contentQueryResult.rows[0].posts.map(Number);
+      }
 
       let updateContentQuery;
       let updateContentParams;
