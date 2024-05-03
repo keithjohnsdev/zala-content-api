@@ -36,6 +36,7 @@ router.post(
         creator_user_uuid,
         title,
         description,
+        description_markup,
         creator_name,
         creator_profile_url,
         scheduled,
@@ -80,7 +81,7 @@ router.post(
 
       // Save content metadata to the database
       await db.query(
-        "INSERT INTO content (title, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, scheduled, accessibility, tags, scheduled_time, org_id, zala_library) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+        "INSERT INTO content (title, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, scheduled, accessibility, tags, scheduled_time, org_id, zala_library, description_markup) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)",
         [
           title,
           description,
@@ -95,6 +96,7 @@ router.post(
           scheduledTime,
           org_id,
           zala_library,
+          description_markup
         ]
       );
 
