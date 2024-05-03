@@ -410,18 +410,26 @@ router.post(
         [true, scheduledTime, contentId]
       );
 
-      // Insert a new row into the posts table
-      await db.query(
-        `INSERT INTO posts (content_id, post_time, creator_user_uuid, scheduled, accessibility)
+      if (!queryResult.rows[0].scheduled) {
+        // Insert a new row into the posts table
+        await db.query(
+          `INSERT INTO posts (content_id, post_time, creator_user_uuid, scheduled, accessibility)
         VALUES ($1, $2, $3, $4, $5)`,
-        [
-          queryResult.rows[0].content_id,
+          [
+            queryResult.rows[0].content_id,
+            scheduledTime,
+            queryResult.rows[0].creator_user_uuid,
+            true,
+            queryResult.rows[0].accessibility,
+          ]
+        );
+      } else {
+        // Find the row on posts table by postId and update post_time
+        await db.query("UPDATE posts SET post_time = $1 WHERE post_id = $2", [
           scheduledTime,
-          queryResult.rows[0].creator_user_uuid,
-          true,
-          queryResult.rows[0].accessibility,
-        ]
-      );
+          queryResult.rows[0].post_id,
+        ]);
+      }
 
       res.status(200).json({ message: "Content scheduled" });
     } catch (error) {
