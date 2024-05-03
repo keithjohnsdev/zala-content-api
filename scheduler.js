@@ -21,39 +21,8 @@ async function publishContent() {
     for (const content of scheduledContent) {
       const postId = content.post_id;
 
-      // Query the content table to get the current posts array
-      const contentQueryResult = await db.query(
-        "SELECT posts FROM content WHERE content_id = $1",
-        [content.content_id]
-      );
-
-      // Extract the posts array from the query result and convert it to integer array
-      let currentPostsArray = [];
-      if (contentQueryResult.rows[0].posts) {
-        console.log("checking posts array types")
-        console.log(`posts type: ${typeof contentQueryResult.rows[0].posts}`)
-        console.log(`posts item type: ${typeof contentQueryResult.rows[0].posts[0]}`)
-        currentPostsArray = contentQueryResult.rows[0].posts.map(Number);
-      }
-
-      console.log(`type of postId: ${typeof postId}`)
-      let updateContentQuery;
-      let updateContentParams;
-
-      if (currentPostsArray && currentPostsArray.length > 0) {
-        // If the posts array is not null or empty, append to it
-        updateContentQuery =
-          "UPDATE content SET scheduled = $1, posts = array_append(posts, CAST($2 AS INTEGER)) WHERE content_id = $3";
-        updateContentParams = [false, postId, content.content_id];
-      } else {
-        // If the posts array is null or empty, initialize it with the post_id
-        updateContentQuery =
-          "UPDATE content SET scheduled = $1, posts = ARRAY[$2] WHERE content_id = $3";
-        updateContentParams = [false, postId, content.content_id];
-      }
-
       // Update content table
-      await db.query(updateContentQuery, updateContentParams);
+      await db.query("UPDATE content SET scheduled = $1 WHERE content_id = $2", [false, content.content_id]);
 
       // Update posts table
       await db.query("UPDATE posts SET scheduled = $1 WHERE post_id = $2", [
