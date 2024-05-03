@@ -30,9 +30,13 @@ async function publishContent() {
       // Extract the posts array from the query result and convert it to integer array
       let currentPostsArray = [];
       if (contentQueryResult.rows[0].posts) {
+        console.log("checking posts array types")
+        console.log(`posts type: ${typeof contentQueryResult.rows[0].posts}`)
+        console.log(`posts item type: ${typeof contentQueryResult.rows[0].posts[0]}`)
         currentPostsArray = contentQueryResult.rows[0].posts.map(Number);
       }
 
+      console.log(`type of postId: ${typeof postId}`)
       let updateContentQuery;
       let updateContentParams;
 
