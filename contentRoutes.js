@@ -362,35 +362,6 @@ router.put(
   }
 );
 
-// Route for removing content from the schedule
-router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
-  try {
-    const { contentId } = req.params;
-
-    // Query the database to find the content by contentId
-    const queryResult = await db.query(
-      "SELECT * FROM content WHERE content_id = $1",
-      [contentId]
-    );
-
-    // Check if content with the provided contentId exists
-    if (queryResult.rows.length === 0) {
-      return res.status(404).json({ error: "Content not found" });
-    }
-
-    // Update the content to remove it from the schedule
-    await db.query(
-      "UPDATE content SET scheduled = $1, scheduled_time = NULL WHERE content_id = $2",
-      [false, contentId]
-    );
-
-    res.status(200).json({ message: "Content removed from schedule" });
-  } catch (error) {
-    console.error("Error removing content from schedule:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
 // Route for scheduling content
 router.post(
   "/content/schedule/:contentId",
@@ -439,6 +410,19 @@ router.post(
         [true, scheduledTime, contentId]
       );
 
+      // Insert a new row into the posts table
+      await db.query(
+        `INSERT INTO posts (content_id, post_time, creator_user_uuid, scheduled, accessibility)
+        VALUES ($1, $2, $3, $4, $5)`,
+        [
+          queryResult.rows[0].content_id,
+          scheduledTime,
+          queryResult.rows[0].creator_user_uuid,
+          true,
+          queryResult.rows[0].accessibility,
+        ]
+      );
+
       res.status(200).json({ message: "Content scheduled" });
     } catch (error) {
       console.error("Error scheduling content:", error);
@@ -446,6 +430,35 @@ router.post(
     }
   }
 );
+
+// Route for removing content from the schedule
+router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
+  try {
+    const { contentId } = req.params;
+
+    // Query the database to find the content by contentId
+    const queryResult = await db.query(
+      "SELECT * FROM content WHERE content_id = $1",
+      [contentId]
+    );
+
+    // Check if content with the provided contentId exists
+    if (queryResult.rows.length === 0) {
+      return res.status(404).json({ error: "Content not found" });
+    }
+
+    // Update the content to remove it from the schedule
+    await db.query(
+      "UPDATE content SET scheduled = $1, scheduled_time = NULL WHERE content_id = $2",
+      [false, contentId]
+    );
+
+    res.status(200).json({ message: "Content removed from schedule" });
+  } catch (error) {
+    console.error("Error removing content from schedule:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 // Route for liking content
 router.post("/content/like/:contentId", upload.fields([]), async (req, res) => {
