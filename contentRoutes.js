@@ -551,7 +551,7 @@ router.post("/content/like/:postId", upload.fields([]), async (req, res) => {
     // If the postId is already in the dislikes array, decrement dislikes and remove it from dislikes array
     if (dislikedPostIds.includes(postIdInt)) {
       await db.query(
-        `UPDATE posts SET dislikes = dislikes - 1 WHERE post_id = $1`,
+        `UPDATE posts SET dislikes = COALESCE(dislikes, 0) - 1 WHERE post_id = $1`,
         [postIdInt]
       );
 
@@ -564,7 +564,7 @@ router.post("/content/like/:postId", upload.fields([]), async (req, res) => {
     // If the postId is not in the likes array, increment likes and add it to likes array
     if (!likedPostIds.includes(postIdInt)) {
       await db.query(
-        `UPDATE posts SET likes = likes + 1 WHERE post_id = $1`,
+        `UPDATE posts SET likes = COALESCE(likes, 0) + 1 WHERE post_id = $1`,
         [postIdInt]
       );
 
