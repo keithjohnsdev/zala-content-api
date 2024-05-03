@@ -4,9 +4,9 @@ const db = require("./db");
 async function publishContent() {
   console.log("Schedule function ran");
   try {
-    // Query the database for content scheduled for publishing
+    // Query the posts database for content posts scheduled for publishing
     const queryResult = await db.query(
-      "SELECT * FROM content WHERE scheduled = $1 AND scheduled_time <= NOW()",
+      "SELECT * FROM posts WHERE scheduled = $1 AND post_time <= NOW()",
       [true]
     );
 
@@ -19,14 +19,40 @@ async function publishContent() {
 
     // Iterate over the scheduled content and update status to "published"
     for (const content of scheduledContent) {
-      const currentTimestamp = new Date().toISOString(); // Get the current timestamp
-      const updatedPostedArray = content.posted || []; // Initialize as empty array if null or undefined
-      updatedPostedArray.push(currentTimestamp); // Append current timestamp to the array
+      const postId = content.post_id;
 
-      await db.query(
-        "UPDATE content SET scheduled = $1, posted = $2 WHERE content_id = $3",
-        [false, updatedPostedArray, content.content_id]
+      // Query the content table to get the current posts array
+      const contentQueryResult = await db.query(
+        "SELECT posts FROM content WHERE content_id = $1",
+        [content.content_id]
       );
+
+      // Extract the posts array from the query result
+      const currentPostsArray = contentQueryResult.rows[0].posts;
+
+      let updateContentQuery;
+      let updateContentParams;
+
+      if (currentPostsArray && currentPostsArray.length > 0) {
+        // If the posts array is not null or empty, append to it
+        updateContentQuery =
+          "UPDATE content SET scheduled = $1, posts = array_append(posts, $2) WHERE content_id = $3";
+        updateContentParams = [false, postId, content.content_id];
+      } else {
+        // If the posts array is null or empty, initialize it with the post_id
+        updateContentQuery =
+          "UPDATE content SET scheduled = $1, posts = ARRAY[$2] WHERE content_id = $3";
+        updateContentParams = [false, postId, content.content_id];
+      }
+
+      // Update content table
+      await db.query(updateContentQuery, updateContentParams);
+
+      // Update posts table
+      await db.query("UPDATE posts SET scheduled = $1 WHERE post_id = $2", [
+        false,
+        postId,
+      ]);
     }
 
     console.log("Content publishing task executed successfully.");
