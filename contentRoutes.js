@@ -496,19 +496,28 @@ router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
     // Retrieve the posts array from the content table
     const postsArray = queryResult.rows[0].posts;
 
+    // Variable to store the deleted post ID
+    let deletedPostId = null;
+
     // Iterate over each postId in the posts array
     for (const postId of postsArray) {
       // Execute a DELETE query on the posts table
-      await db.query(
-        "DELETE FROM posts WHERE post_id = $1 AND scheduled = $2",
+      const deleteResult = await db.query(
+        "DELETE FROM posts WHERE post_id = $1 AND scheduled = $2 RETURNING post_id",
         [postId, true]
       );
+
+      // Check if any rows were deleted and set the deleted post_id
+      if (deleteResult.rows.length > 0) {
+        deletedPostId = deleteResult.rows[0].post_id;
+        break; // Exit the loop since only one row is deleted
+      }
     }
 
-    // Update the content to remove it from the schedule
+    // Update the content to remove the deleted post ID from the posts array
     await db.query(
-      "UPDATE content SET scheduled = $1, scheduled_time = NULL WHERE content_id = $2",
-      [false, contentId]
+      "UPDATE content SET posts = array_remove(posts, $1), scheduled = $2, scheduled_time = NULL WHERE content_id = $3",
+      [deletedPostId, false, contentId]
     );
 
     res.status(200).json({ message: "Content removed from schedule" });
@@ -517,6 +526,7 @@ router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 
 // Route for liking content
