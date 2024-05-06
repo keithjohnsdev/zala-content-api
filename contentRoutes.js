@@ -538,6 +538,7 @@ router.put(
           contentId, // Update the content with the specified contentId
         ]
       );
+
       if (zala_library === "true") {
         const existingRows = await db.query(
           "SELECT * FROM zala_library WHERE content_id = $1",
@@ -593,6 +594,58 @@ router.put(
           ]);
         } catch (error) {
           console.error("Error deleting row from zala_library table:", error);
+          throw error;
+        }
+      }
+
+      // Check if "public" exists in parsedAccessibility
+      const isPublic = parsedAccessibility.includes("public");
+
+      // If "public" exists, insert into zala_public
+      if (isPublic) {
+        try {
+          // Check if content already exists in zala_public table
+          const existingContent = await db.query(
+            "SELECT * FROM zala_public WHERE title = $1 AND description = $2",
+            [title, description]
+          );
+
+          if (existingContent.rows.length === 0) {
+            // Insert new row into zala_public table
+            await db.query(
+              `INSERT INTO zala_public (
+                  title, 
+                  description, 
+                  s3_video_url, 
+                  s3_thumbnail, 
+                  created_at, 
+                  updated_at, 
+                  creator_user_uuid, 
+                  creator_name, 
+                  creator_profile_url, 
+                  tags, 
+                  org_id, 
+                  description_markup
+              )
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+              [
+                title,
+                description,
+                videoUploadResult.Location,
+                thumbnailUploadResult.Location,
+                new Date(),
+                new Date(),
+                creator_user_uuid,
+                creator_name,
+                creator_profile_url,
+                parsedTags,
+                org_id,
+                description_markup,
+              ]
+            );
+          }
+        } catch (error) {
+          console.error("Error inserting into zala_public table:", error);
           throw error;
         }
       }
