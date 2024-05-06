@@ -16,11 +16,15 @@ const s3 = new S3({
 });
 
 // Middleware to replace undefined values with null
-function replaceUndefinedWithNull(req, res, next) {
+function handleFalsyValues(req, res, next) {
   const reqBody = req.body;
   for (const key in reqBody) {
     if (reqBody[key] === undefined || reqBody[key] === "undefined") {
       reqBody[key] = null;
+    }
+
+    if (reqBody[key] === "false") {
+      reqBody[key] = false;
     }
   }
   next();
@@ -41,7 +45,7 @@ router.post(
     { name: "video", maxCount: 1 },
     { name: "thumbnail", maxCount: 1 },
   ]),
-  replaceUndefinedWithNull,
+  handleFalsyValues,
   async (req, res) => {
     try {
       const {
