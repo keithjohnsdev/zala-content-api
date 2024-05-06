@@ -55,7 +55,7 @@ router.post(
       const parsedAccessibility = JSON.parse(accessibility); // Parse accessibility as JSON
 
       // Handle empty undefined scheduled variable
-      scheduled == !!scheduled;
+      scheduled = scheduled === 'true';
 
       // Handle empty string
       const scheduledTime = scheduled_time === "" ? null : scheduled_time;
