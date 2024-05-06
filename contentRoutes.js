@@ -19,7 +19,7 @@ const s3 = new S3({
 function replaceUndefinedWithNull(req, res, next) {
   const reqBody = req.body;
   for (const key in reqBody) {
-    if (reqBody[key] === undefined) {
+    if (reqBody[key] === undefined || reqBody[key] === "undefined") {
       reqBody[key] = null;
     }
   }
