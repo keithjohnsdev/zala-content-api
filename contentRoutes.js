@@ -631,8 +631,8 @@ router.put(
               [
                 title,
                 description,
-                videoUploadResult.Location,
-                thumbnailUploadResult.Location,
+                newVideoUrl,
+                newThumbnailUrl,
                 new Date(),
                 new Date(),
                 creator_user_uuid,
