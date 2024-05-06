@@ -15,6 +15,16 @@ const s3 = new S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
+// Middleware to replace undefined values with null
+function replaceUndefinedWithNull(req, res, next) {
+  for (const key in req.body) {
+    if (req.body.hasOwnProperty(key) && req.body[key] === undefined) {
+      req.body[key] = null;
+    }
+  }
+  next();
+}
+
 router.get("/contentStatus", (req, res) => {
   const status = {
     Status: "Content Routes Working",
@@ -30,6 +40,7 @@ router.post(
     { name: "video", maxCount: 1 },
     { name: "thumbnail", maxCount: 1 },
   ]),
+  replaceUndefinedWithNull,
   async (req, res) => {
     try {
       const {
