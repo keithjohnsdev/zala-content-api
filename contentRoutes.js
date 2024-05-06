@@ -631,9 +631,10 @@ router.put(
                   creator_profile_url, 
                   tags, 
                   org_id, 
-                  description_markup
+                  description_markup,
+                  content_id
               )
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
               [
                 title,
                 description,
@@ -647,6 +648,7 @@ router.put(
                 parsedTags,
                 org_id,
                 description_markup,
+                contentId
               ]
             );
           }
