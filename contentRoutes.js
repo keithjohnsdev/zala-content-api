@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const { S3 } = require("aws-sdk"); // Import only the S3 module
-const { v4: uuidv4 } = require("uuid");
+const { v4: uuidv4, parse } = require("uuid");
 const db = require("./db");
 
 const router = express.Router();
@@ -526,8 +526,8 @@ router.put(
 
       zala_library = Boolean(zala_library);
 
-      console.log(`tags: ${parsedTags}`);
-      console.log(parsedTags);
+      console.log(`accessibility: ${parsedAccessibility}`);
+      console.log(parsedAccessibility);
 
       // Update content metadata in the database
       await db.query(
