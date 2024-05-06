@@ -58,8 +58,7 @@ router.post(
       const scheduledValue = scheduled === "true";
 
       // Handle undefined or empty string values for scheduled_time
-      const scheduledTime =
-        scheduled_time === "undefined" && null;
+      const scheduledTime = scheduled_time === "undefined" && null;
       console.log(`scheduledTime: ${scheduledTime}`);
 
       // Get filenames for video and thumbnail
@@ -374,6 +373,9 @@ router.put(
       const { contentId } = req.params; // Extract contentId from route params
       const {
         creator_user_uuid,
+        creator_name,
+        creator_profile_url,
+        org_id,
         title,
         description,
         description_markup,
@@ -468,6 +470,55 @@ router.put(
           contentId, // Update the content with the specified contentId
         ]
       );
+
+      if (zala_library) {
+        const existingRows = await db.query(
+          "SELECT * FROM zala_library WHERE content_id = $1",
+          [contentId]
+        );
+
+        if (existingRows.rows.length === 0) {
+          try {
+            // Insert a new row into the zala_library table
+            await db.query(
+              `INSERT INTO zala_library (
+                    content_id, 
+                    title, 
+                    description, 
+                    s3_video_url, 
+                    s3_thumbnail, 
+                    created_at, 
+                    updated_at, 
+                    creator_user_uuid, 
+                    creator_name, 
+                    creator_profile_url, 
+                    tags, 
+                    org_id, 
+                    description_markup
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+              [
+                contentId,
+                title,
+                description,
+                newVideoUrl,
+                newThumbnailUrl,
+                new Date(),
+                new Date(),
+                creator_user_uuid,
+                creator_name,
+                creator_profile_url,
+                parsedTags,
+                org_id,
+                description_markup,
+              ]
+            );
+          } catch (error) {
+            console.error("Error inserting into zala_library table:", error);
+            throw error;
+          }
+        }
+      }
 
       res.status(200).json({ message: "Content updated" });
     } catch (error) {
