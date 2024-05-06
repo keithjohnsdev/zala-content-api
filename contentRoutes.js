@@ -16,6 +16,8 @@ const s3 = new S3({
 });
 
 function handleFalsyValues(req, res, next) {
+
+  console.log('handle Falsies ran')
   for (const key in req.body) {
     if (
       req.body[key] === undefined ||
