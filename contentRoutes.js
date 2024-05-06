@@ -58,7 +58,7 @@ router.post(
       const scheduledValue = scheduled === 'true';
 
       // Handle empty string
-      const scheduledTime = scheduled_time === "" ? null : scheduled_time;
+      const scheduledTime = scheduled_time ? (scheduled_time === "" ? null : scheduled_time) : null;
 
       // Get filenames for video and thumbnail
       const videoFilename = videoFile.originalname;
