@@ -58,7 +58,7 @@ router.post(
       const scheduledValue = scheduled === 'true';
 
       // Handle empty string
-      const scheduledTime = scheduled_time ? (scheduled_time === "" ? null : scheduled_time) : null;
+      const scheduledTime = Boolean(scheduled_time) ? (scheduled_time === "" ? null : scheduled_time) : null;
 
       // Get filenames for video and thumbnail
       const videoFilename = videoFile.originalname;
@@ -93,7 +93,7 @@ router.post(
           creator_name,
           creator_profile_url,
           creator_user_uuid,
-          scheduledValue, // Changed from status to scheduled
+          scheduledValue,
           parsedAccessibility,
           parsedTags,
           scheduledTime,
