@@ -435,6 +435,7 @@ router.put(
   upload.fields([
     { name: "video", maxCount: 1 },
     { name: "thumbnail", maxCount: 1 },
+    handleFalsyValues,
   ]),
   async (req, res) => {
     try {
