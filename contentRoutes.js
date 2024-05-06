@@ -59,6 +59,7 @@ router.post(
 
       // Handle empty string
       const scheduledTime = Boolean(scheduled_time) ? (scheduled_time === "" ? null : scheduled_time) : null;
+      console.log(`scheduledTime: ${scheduledTime}`)
 
       // Get filenames for video and thumbnail
       const videoFilename = videoFile.originalname;
