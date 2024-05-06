@@ -520,6 +520,8 @@ router.put(
           .promise();
       }
 
+      zala_library = Boolean(zala_library);
+
       console.log(`zala library: ${zala_library}`)
       console.log(`type: ${typeof zala_library}`)
 
