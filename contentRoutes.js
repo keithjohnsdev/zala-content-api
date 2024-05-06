@@ -54,6 +54,9 @@ router.post(
       const parsedTags = JSON.parse(tags);
       const parsedAccessibility = JSON.parse(accessibility); // Parse accessibility as JSON
 
+      // Handle empty undefined scheduled variable
+      scheduled == !!scheduled;
+
       // Handle empty string
       const scheduledTime = scheduled_time === "" ? null : scheduled_time;
 
