@@ -31,6 +31,7 @@ function handleFalsyValues(req, res, next) {
   }
 
   function handleNestedFalsyValues(obj) {
+    console.log('nested object in falsy function', obj)
     for (const key in obj) {
       if (
         obj[key] === undefined ||
@@ -43,6 +44,8 @@ function handleFalsyValues(req, res, next) {
       } else if (typeof req.body[key] === "object" && obj[key] !== null) {
         obj[key] = handleNestedFalsyValues(obj[key]);
       }
+
+      return obj;
     }
   }
   next();
