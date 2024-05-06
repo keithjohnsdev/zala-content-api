@@ -17,12 +17,32 @@ const s3 = new S3({
 
 function handleFalsyValues(req, res, next) {
   for (const key in req.body) {
-    if (req.body[key] === undefined || req.body[key] === "undefined" || req.body[key] === "null") {
+    if (
+      req.body[key] === undefined ||
+      req.body[key] === "undefined" ||
+      req.body[key] === "null"
+    ) {
       req.body[key] = null;
     } else if (req.body[key] === "false") {
       req.body[key] = false;
     } else if (typeof req.body[key] === "object" && req.body[key] !== null) {
-      req.body[key] = handleFalsyValues(req.body[key]);
+      req.body[key] = handleNestedFalsyValues(req.body[key]);
+    }
+  }
+
+  function handleNestedFalsyValues(obj) {
+    for (const key in obj) {
+      if (
+        obj[key] === undefined ||
+        obj[key] === "undefined" ||
+        obj[key] === "null"
+      ) {
+        obj[key] = null;
+      } else if (obj[key] === "false") {
+        obj[key] = false;
+      } else if (typeof req.body[key] === "object" && obj[key] !== null) {
+        obj[key] = handleNestedFalsyValues(obj[key]);
+      }
     }
   }
   next();
@@ -519,9 +539,12 @@ router.put(
           .promise();
       }
 
-      console.log(zala_library)
+      console.log(zala_library);
 
       zala_library = Boolean(zala_library);
+
+      console.log(`zala library: ${zala_library}`);
+      console.log(`type zala library: ${typeof zala_library}`);
 
       // Update content metadata in the database
       await db.query(
@@ -542,9 +565,6 @@ router.put(
           contentId, // Update the content with the specified contentId
         ]
       );
-
-      console.log(`zala library: ${zala_library}`)
-      console.log(`type zala library: ${typeof zala_library}`)
 
       if (zala_library) {
         const existingRows = await db.query(
@@ -594,7 +614,7 @@ router.put(
           }
         }
       } else {
-        console.log('else block ran zala library')
+        console.log("else block ran zala library");
         try {
           // Delete the row from the zala_library table that matches the content_id
           await db.query("DELETE FROM zala_library WHERE content_id = $1", [
