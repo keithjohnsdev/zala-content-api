@@ -74,7 +74,7 @@ router.post(
       const scheduledValue = scheduled === "true";
 
       // Handle undefined or empty string values for scheduled_time
-      const scheduledTime = scheduled_time === "undefined" && null;
+      const scheduledTime = scheduled_time;
       console.log(`type of scheduledTime: ${typeof scheduledTime}`);
 
       // Get filenames for video and thumbnail
@@ -113,7 +113,7 @@ router.post(
           scheduledValue,
           parsedAccessibility,
           parsedTags,
-          scheduledTime,
+          scheduledTime || "",
           org_id,
           zala_library,
           description_markup,
