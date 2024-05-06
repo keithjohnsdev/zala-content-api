@@ -59,9 +59,7 @@ router.post(
 
       // Handle undefined or empty string values for scheduled_time
       const scheduledTime =
-        scheduled_time !== undefined && scheduled_time !== ""
-          ? scheduled_time
-          : null;
+        scheduled_time === "undefined" && null;
       console.log(`scheduledTime: ${scheduledTime}`);
 
       // Get filenames for video and thumbnail
