@@ -113,7 +113,7 @@ router.post(
           scheduledValue,
           parsedAccessibility,
           parsedTags,
-          scheduledTime || "",
+          scheduledTime,
           org_id,
           zala_library,
           description_markup,
