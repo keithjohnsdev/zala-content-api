@@ -15,22 +15,17 @@ const s3 = new S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-// Middleware to replace undefined values with null
 function handleFalsyValues(req, res, next) {
   for (const key in req.body) {
-    if (
-      req.body[key] === undefined ||
-      req.body[key] === "undefined" ||
-      req.body[key] === "null"
-    ) {
+    if (req.body[key] === undefined || req.body[key] === "undefined" || req.body[key] === "null") {
       req.body[key] = null;
-    }
-
-    if (req.body[key] === "false") {
+    } else if (req.body[key] === "false") {
       req.body[key] = false;
+    } else if (typeof req.body[key] === "object" && req.body[key] !== null) {
+      req.body[key] = handleFalsyValues(req.body[key]);
     }
   }
-  next();
+  return req.body;
 }
 
 router.get("/contentStatus", (req, res) => {
