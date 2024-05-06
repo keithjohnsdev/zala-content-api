@@ -520,6 +520,9 @@ router.put(
           .promise();
       }
 
+      console.log(`zala library: ${zala_library}`)
+      console.log(`type: ${typeof zala_library}`)
+
       // Update content metadata in the database
       await db.query(
         `UPDATE content 
