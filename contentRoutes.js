@@ -440,7 +440,7 @@ router.put(
   async (req, res) => {
     try {
       const { contentId } = req.params; // Extract contentId from route params
-      const {
+      let {
         creator_user_uuid,
         creator_name,
         creator_profile_url,
