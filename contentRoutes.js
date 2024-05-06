@@ -367,14 +367,14 @@ router.post("/content/bySuperusers", upload.none(), async (req, res) => {
 });
 
 // Route for deleting content
-router.delete("/content/delete/:videoId", async (req, res) => {
+router.delete("/content/delete/:contentId", async (req, res) => {
   try {
-    const { videoId } = req.params; // Get the videoId from the request parameters
+    const { contentId } = req.params; // Get the videoId from the request parameters
 
     // Fetch content metadata including S3 URLs from the database
     const queryResult = await db.query(
       "SELECT s3_video_url, s3_thumbnail FROM content WHERE content_id = $1",
-      [videoId]
+      [contentId]
     );
 
     // Extract S3 URLs from the query result
@@ -384,8 +384,17 @@ router.delete("/content/delete/:videoId", async (req, res) => {
     const videoKey = extractS3Key(s3_video_url);
     const thumbnailKey = extractS3Key(s3_thumbnail);
 
-    // Delete content metadata from the database
-    await db.query("DELETE FROM content WHERE content_id = $1", [videoId]);
+    // Delete content metadata from the content table
+    await db.query("DELETE FROM content WHERE content_id = $1", [contentId]);
+
+    // Delete related entries from the posts table
+    await db.query("DELETE FROM posts WHERE content_id = $1", [contentId]);
+
+    // Delete related entry from the zala_library table
+    await db.query("DELETE FROM zala_library WHERE content_id = $1", [contentId]);
+
+    // Delete related entry from the zala_public table
+    await db.query("DELETE FROM zala_public WHERE content_id = $1", [contentId]);
 
     // Delete video and thumbnail files from S3
     const deletePromises = Promise.all([
@@ -544,10 +553,8 @@ router.put(
           })
           .promise();
       }
-      zala_library = zala_library === "true";
 
-      console.log(`zala library: ${zala_library}`);
-      console.log(`type zala library: ${typeof zala_library}`);
+      zala_library = zala_library === "true";
 
       // Update content metadata in the database
       await db.query(
