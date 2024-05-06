@@ -166,6 +166,48 @@ router.post(
         }
       }
 
+      if (zala_library) {
+        try {
+            // Insert a new row into the zala_library table
+            await db.query(
+                `INSERT INTO zala_library (
+                    content_id, 
+                    title, 
+                    description, 
+                    s3_video_url, 
+                    s3_thumbnail, 
+                    created_at, 
+                    updated_at, 
+                    creator_user_uuid, 
+                    creator_name, 
+                    creator_profile_url, 
+                    tags, 
+                    org_id, 
+                    description_markup
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+                [
+                    contentId,
+                    title,
+                    description,
+                    videoUploadResult.Location,
+                    thumbnailUploadResult.Location,
+                    new Date(),
+                    new Date(),
+                    creator_user_uuid,
+                    creator_name,
+                    creator_profile_url,
+                    parsedTags,
+                    org_id,
+                    description_markup,
+                ]
+            );
+        } catch (error) {
+            console.error("Error inserting into zala_library table:", error);
+            throw error;
+        }
+    }
+
       res.status(201).json({ message: "Content created successfully" });
     } catch (error) {
       console.error("Error creating content:", error);
@@ -571,7 +613,7 @@ router.post(
   }
 );
 
-// Route for removing post from the schedule
+// Route for removing content from the schedule
 router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
   try {
     const { contentId } = req.params;
