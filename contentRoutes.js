@@ -546,6 +546,9 @@ router.put(
         ]
       );
 
+      console.log(`zala library: ${zala_library}`)
+      console.log(`type zala library: ${typeof zala_library}`)
+
       if (zala_library) {
         const existingRows = await db.query(
           "SELECT * FROM zala_library WHERE content_id = $1",
@@ -594,6 +597,7 @@ router.put(
           }
         }
       } else {
+        console.log('else block ran zala library')
         try {
           // Delete the row from the zala_library table that matches the content_id
           await db.query("DELETE FROM zala_library WHERE content_id = $1", [
