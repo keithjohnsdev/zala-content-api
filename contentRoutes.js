@@ -55,7 +55,7 @@ router.post(
       const parsedAccessibility = JSON.parse(accessibility); // Parse accessibility as JSON
 
       // Handle empty undefined scheduled variable
-      scheduled = scheduled === 'true';
+      const scheduledValue = scheduled === 'true';
 
       // Handle empty string
       const scheduledTime = scheduled_time === "" ? null : scheduled_time;
@@ -93,7 +93,7 @@ router.post(
           creator_name,
           creator_profile_url,
           creator_user_uuid,
-          scheduled, // Changed from status to scheduled
+          scheduledValue, // Changed from status to scheduled
           parsedAccessibility,
           parsedTags,
           scheduledTime,
@@ -107,7 +107,7 @@ router.post(
 
       let postId;
 
-      if (scheduled) {
+      if (scheduledValue) {
         try {
           // Begin a transaction
           await db.query("BEGIN");
