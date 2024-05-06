@@ -25,7 +25,7 @@ function handleFalsyValues(req, res, next) {
       req.body[key] = handleFalsyValues(req.body[key]);
     }
   }
-  return req.body;
+  next();
 }
 
 router.get("/contentStatus", (req, res) => {
