@@ -170,7 +170,7 @@ router.post(
         }
       }
 
-      if (zala_library) {
+      if (zala_library === "true") {
         try {
           // Insert a new row into the zala_library table
           await db.query(
@@ -470,8 +470,6 @@ router.put(
           contentId, // Update the content with the specified contentId
         ]
       );
-
-      console.log(zala_library);
       if (zala_library === "true") {
         const existingRows = await db.query(
           "SELECT * FROM zala_library WHERE content_id = $1",
