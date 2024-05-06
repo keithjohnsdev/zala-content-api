@@ -75,7 +75,7 @@ router.post(
 
       // Handle undefined or empty string values for scheduled_time
       const scheduledTime = scheduled_time === "undefined" && null;
-      console.log(`scheduledTime: ${scheduledTime}`);
+      console.log(`type of scheduledTime: ${typeof scheduledTime}`);
 
       // Get filenames for video and thumbnail
       const videoFilename = videoFile.originalname;
