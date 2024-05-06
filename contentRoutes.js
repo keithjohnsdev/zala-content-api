@@ -606,8 +606,8 @@ router.put(
         try {
           // Check if content already exists in zala_public table
           const existingContent = await db.query(
-            "SELECT * FROM zala_public WHERE title = $1 AND description = $2",
-            [title, description]
+            "SELECT * FROM zala_public WHERE content_id = $1",
+            [contentId]
           );
 
           if (existingContent.rows.length === 0) {
@@ -646,6 +646,16 @@ router.put(
           }
         } catch (error) {
           console.error("Error inserting into zala_public table:", error);
+          throw error;
+        }
+      } else {
+        try {
+          // Delete the row from the zala_library table that matches the content_id
+          await db.query("DELETE FROM zala_public WHERE content_id = $1", [
+            contentId,
+          ]);
+        } catch (error) {
+          console.error("Error deleting row from zala_public table:", error);
           throw error;
         }
       }
