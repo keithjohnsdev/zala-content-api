@@ -471,7 +471,8 @@ router.put(
         ]
       );
 
-      if (zala_library) {
+      console.log(zala_library);
+      if (zala_library === "true") {
         const existingRows = await db.query(
           "SELECT * FROM zala_library WHERE content_id = $1",
           [contentId]
