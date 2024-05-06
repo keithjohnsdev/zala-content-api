@@ -16,8 +16,7 @@ const s3 = new S3({
 });
 
 function handleFalsyValues(req, res, next) {
-
-  console.log('handle Falsies ran')
+  console.log("handle Falsies ran");
   for (const key in req.body) {
     if (
       req.body[key] === undefined ||
@@ -33,7 +32,7 @@ function handleFalsyValues(req, res, next) {
   }
 
   function handleNestedFalsyValues(obj) {
-    console.log('nested object in falsy function', obj)
+    console.log("nested object in falsy function", obj);
     for (const key in obj) {
       if (
         obj[key] === undefined ||
@@ -296,7 +295,7 @@ router.post(
                 parsedTags,
                 org_id,
                 description_markup,
-                contentId
+                contentId,
               ]
             );
           }
@@ -461,8 +460,8 @@ router.put(
   upload.fields([
     { name: "video", maxCount: 1 },
     { name: "thumbnail", maxCount: 1 },
-    handleFalsyValues,
   ]),
+  handleFalsyValues,
   async (req, res) => {
     try {
       const { contentId } = req.params; // Extract contentId from route params
@@ -545,10 +544,7 @@ router.put(
           })
           .promise();
       }
-
-      console.log(zala_library);
-      console.log(typeof zala_library);
-      zala_library = Boolean(zala_library);
+      zala_library = zala_library === "true";
 
       console.log(`zala library: ${zala_library}`);
       console.log(`type zala library: ${typeof zala_library}`);
