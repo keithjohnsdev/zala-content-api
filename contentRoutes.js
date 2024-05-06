@@ -17,14 +17,13 @@ const s3 = new S3({
 
 // Middleware to replace undefined values with null
 function handleFalsyValues(req, res, next) {
-  const reqBody = req.body;
-  for (const key in reqBody) {
-    if (reqBody[key] === undefined || reqBody[key] === "undefined") {
-      reqBody[key] = null;
+  for (const key in req.body) {
+    if (req.body[key] === undefined || req.body[key] === "undefined") {
+      req.body[key] = null;
     }
 
-    if (reqBody[key] === "false") {
-      reqBody[key] = false;
+    if (req.body[key] === "false") {
+      req.body[key] = false;
     }
   }
   next();
@@ -76,6 +75,7 @@ router.post(
       // Handle undefined or empty string values for scheduled_time
       const scheduledTime = scheduled_time;
       console.log(`type of scheduledTime: ${typeof scheduledTime}`);
+      console.log(`scheduledTime: ${scheduledTime}`);
 
       // Get filenames for video and thumbnail
       const videoFilename = videoFile.originalname;
