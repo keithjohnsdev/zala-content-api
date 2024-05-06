@@ -18,7 +18,7 @@ const s3 = new S3({
 // Middleware to replace undefined values with null
 function handleFalsyValues(req, res, next) {
   for (const key in req.body) {
-    if (req.body[key] === undefined || req.body[key] === "undefined") {
+    if (req.body[key] === undefined || req.body[key] === "undefined" || req.body[key] === "null") {
       req.body[key] = null;
     }
 
