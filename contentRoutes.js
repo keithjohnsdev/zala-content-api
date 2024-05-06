@@ -526,9 +526,6 @@ router.put(
 
       zala_library = Boolean(zala_library);
 
-      console.log(`accessibility: ${parsedAccessibility}`);
-      console.log(parsedAccessibility);
-
       // Update content metadata in the database
       await db.query(
         `UPDATE content 
@@ -549,7 +546,7 @@ router.put(
         ]
       );
 
-      if (zala_library === "true") {
+      if (zala_library) {
         const existingRows = await db.query(
           "SELECT * FROM zala_library WHERE content_id = $1",
           [contentId]
