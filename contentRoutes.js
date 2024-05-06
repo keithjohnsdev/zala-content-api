@@ -16,12 +16,14 @@ const s3 = new S3({
 });
 
 // Middleware to replace undefined values with null
-function replaceUndefinedWithNull(reqBody) {
+function replaceUndefinedWithNull(req, res, next) {
+  const reqBody = req.body;
   for (const key in reqBody) {
-    if (reqBody.hasOwnProperty(key) && reqBody[key] === undefined) {
+    if (reqBody[key] === undefined) {
       reqBody[key] = null;
     }
   }
+  next();
 }
 
 router.get("/contentStatus", (req, res) => {
@@ -39,6 +41,7 @@ router.post(
     { name: "video", maxCount: 1 },
     { name: "thumbnail", maxCount: 1 },
   ]),
+  replaceUndefinedWithNull,
   async (req, res) => {
     try {
       const {
@@ -58,8 +61,6 @@ router.post(
       const videoFile = req.files["video"][0];
       const thumbnailFile = req.files["thumbnail"][0];
       console.log(req.body);
-
-      replaceUndefinedWithNull(req.body);
 
       // Parse the JSON arrays
       const parsedTags = JSON.parse(tags);
