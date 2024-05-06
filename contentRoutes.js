@@ -518,6 +518,16 @@ router.put(
             throw error;
           }
         }
+      } else {
+        try {
+          // Delete the row from the zala_library table that matches the content_id
+          await db.query("DELETE FROM zala_library WHERE content_id = $1", [
+            contentId,
+          ]);
+        } catch (error) {
+          console.error("Error deleting row from zala_library table:", error);
+          throw error;
+        }
       }
 
       res.status(200).json({ message: "Content updated" });
