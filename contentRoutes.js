@@ -524,6 +524,8 @@ router.put(
           .promise();
       }
 
+      console.log(zala_library)
+
       zala_library = Boolean(zala_library);
 
       // Update content metadata in the database
