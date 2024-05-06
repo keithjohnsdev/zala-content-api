@@ -18,7 +18,11 @@ const s3 = new S3({
 // Middleware to replace undefined values with null
 function handleFalsyValues(req, res, next) {
   for (const key in req.body) {
-    if (req.body[key] === undefined || req.body[key] === "undefined" || req.body[key] === "null") {
+    if (
+      req.body[key] === undefined ||
+      req.body[key] === "undefined" ||
+      req.body[key] === "null"
+    ) {
       req.body[key] = null;
     }
 
@@ -522,8 +526,8 @@ router.put(
 
       zala_library = Boolean(zala_library);
 
-      console.log(`zala library: ${zala_library}`)
-      console.log(`type: ${typeof zala_library}`)
+      console.log(`tags: ${parsedTags}`);
+      console.log(parsedTags);
 
       // Update content metadata in the database
       await db.query(
@@ -648,7 +652,7 @@ router.put(
                 parsedTags,
                 org_id,
                 description_markup,
-                contentId
+                contentId,
               ]
             );
           }
