@@ -540,7 +540,7 @@ router.put(
       }
 
       console.log(zala_library);
-
+      console.log(typeof zala_library);
       zala_library = Boolean(zala_library);
 
       console.log(`zala library: ${zala_library}`);
