@@ -55,11 +55,14 @@ router.post(
       const parsedAccessibility = JSON.parse(accessibility); // Parse accessibility as JSON
 
       // Handle empty undefined scheduled variable
-      const scheduledValue = scheduled === 'true';
+      const scheduledValue = scheduled === "true";
 
-      // Handle empty string
-      const scheduledTime = Boolean(scheduled_time) ? (scheduled_time === "" ? null : scheduled_time) : null;
-      console.log(`scheduledTime: ${scheduledTime}`)
+      // Handle undefined or empty string values for scheduled_time
+      const scheduledTime =
+        scheduled_time !== undefined && scheduled_time !== ""
+          ? scheduled_time
+          : null;
+      console.log(`scheduledTime: ${scheduledTime}`);
 
       // Get filenames for video and thumbnail
       const videoFilename = videoFile.originalname;
@@ -172,9 +175,9 @@ router.post(
 
       if (zala_library) {
         try {
-            // Insert a new row into the zala_library table
-            await db.query(
-                `INSERT INTO zala_library (
+          // Insert a new row into the zala_library table
+          await db.query(
+            `INSERT INTO zala_library (
                     content_id, 
                     title, 
                     description, 
@@ -190,27 +193,27 @@ router.post(
                     description_markup
                 )
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-                [
-                    contentId,
-                    title,
-                    description,
-                    videoUploadResult.Location,
-                    thumbnailUploadResult.Location,
-                    new Date(),
-                    new Date(),
-                    creator_user_uuid,
-                    creator_name,
-                    creator_profile_url,
-                    parsedTags,
-                    org_id,
-                    description_markup,
-                ]
-            );
+            [
+              contentId,
+              title,
+              description,
+              videoUploadResult.Location,
+              thumbnailUploadResult.Location,
+              new Date(),
+              new Date(),
+              creator_user_uuid,
+              creator_name,
+              creator_profile_url,
+              parsedTags,
+              org_id,
+              description_markup,
+            ]
+          );
         } catch (error) {
-            console.error("Error inserting into zala_library table:", error);
-            throw error;
+          console.error("Error inserting into zala_library table:", error);
+          throw error;
         }
-    }
+      }
 
       res.status(201).json({ message: "Content created successfully" });
     } catch (error) {
