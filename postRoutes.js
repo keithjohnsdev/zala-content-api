@@ -15,7 +15,58 @@ const s3 = new S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-// Route for listing posts by superusers
+// Route for "browse all" view (Zala public from all superusers and content from subscribed superusers)
+router.post("/posts/browseAll", upload.none(), async (req, res) => {
+  try {
+    const { creatorIds } = req.body;
+
+    // Parse JSON string to array if needed
+    const parsedIds =
+      typeof creatorIds === "string" ? JSON.parse(creatorIds) : creatorIds;
+
+    // Ensure parsedIds is an array
+    if (!Array.isArray(parsedIds)) {
+      return res.status(400).json({ error: "creatorIds must be an array" });
+    }
+
+    // Fetch published content from the database for the given creatorIds
+    const subscribedListQuery = await db.query(
+      `SELECT * FROM posts 
+      WHERE creator_user_uuid IN (${parsedIds
+        .map((id, index) => `$${index + 1}`)
+        .join(", ")})
+      AND scheduled = false
+      AND post_time < NOW()`,
+      parsedIds
+    );
+
+    // Fetch all zala public content
+    const zalaPublicQuery = await db.query(
+      `SELECT * FROM zala_public
+      WHERE scheduled = false
+      AND post_time < NOW()`
+    );
+
+    // Extract the rows from the query result
+    const subscribedList = subscribedListQuery.rows;
+    const zalaPublicList = zalaPublicQuery.rows;
+
+    // Concatenate the two arrays
+    const combinedList = [...subscribedList, ...zalaPublicList];
+
+    // Sort the combined array by post_time in descending order
+    combinedList.sort((a, b) => new Date(b.post_time) - new Date(a.post_time));
+
+    // Now combinedList contains both sets of rows sorted by post_time
+
+    res.status(200).json(combinedList);
+  } catch (error) {
+    console.error("Error fetching content:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Route for listing posts by superusers ("app content view For You")
 router.post("/posts/bySuperusers", upload.none(), async (req, res) => {
   try {
     const { creatorIds } = req.body;
@@ -32,7 +83,9 @@ router.post("/posts/bySuperusers", upload.none(), async (req, res) => {
     // Fetch published content from the database for the given creatorIds
     const queryResult = await db.query(
       `SELECT * FROM posts 
-      WHERE creator_user_uuid IN (${parsedIds.map((id, index) => `$${index + 1}`).join(", ")})
+      WHERE creator_user_uuid IN (${parsedIds
+        .map((id, index) => `$${index + 1}`)
+        .join(", ")})
       AND scheduled = false
       AND post_time < NOW()`,
       parsedIds
