@@ -41,9 +41,7 @@ router.post("/posts/browseAll", upload.none(), async (req, res) => {
     );
 
     // Fetch all zala public content
-    const zalaPublicQuery = await db.query(
-      `SELECT * FROM zala_public`
-    );
+    const zalaPublicQuery = await db.query(`SELECT * FROM zala_public`);
 
     // Extract the rows from the query result
     const subscribedList = subscribedListQuery.rows;
@@ -66,7 +64,7 @@ router.post("/posts/browseAll", upload.none(), async (req, res) => {
     combinedList.sort((a, b) => new Date(b.post_time) - new Date(a.post_time));
 
     // Now combinedList contains both sets of rows sorted by post_time without duplicates
-
+    console.log(combinedList);
     res.status(200).json(combinedList);
   } catch (error) {
     console.error("Error fetching content:", error);
