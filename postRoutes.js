@@ -42,9 +42,7 @@ router.post("/posts/browseAll", upload.none(), async (req, res) => {
 
     // Fetch all zala public content
     const zalaPublicQuery = await db.query(
-      `SELECT * FROM zala_public
-      WHERE scheduled = false
-      AND post_time < NOW()`
+      `SELECT * FROM zala_public`
     );
 
     // Extract the rows from the query result
