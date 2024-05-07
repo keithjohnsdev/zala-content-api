@@ -85,7 +85,7 @@ router.post("/posts/forYou", upload.none(), async (req, res) => {
 });
 
 // Route for "Browse All" view, all public content
-router.post("/posts/browseAll", async (req, res) => {
+router.get("/posts/browseAll", async (req, res) => {
     try {
         // Fetch published content from the database for the given creatorIds
         const queryResult = await db.query(
