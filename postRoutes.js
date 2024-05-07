@@ -34,7 +34,7 @@ router.post("/posts/bySuperusers", upload.none(), async (req, res) => {
       `SELECT * FROM posts 
       WHERE creator_user_uuid IN (${parsedIds.map((id, index) => `$${index + 1}`).join(", ")})
       AND scheduled = false
-      AND scheduled_time < NOW()`,
+      AND post_time < NOW()`,
       parsedIds
     );
 
