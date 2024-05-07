@@ -107,6 +107,26 @@ router.post("/posts/bySuperusers", upload.none(), async (req, res) => {
   }
 });
 
+// Route for listing posts by superuser UUID
+router.post("/posts/:creatorId", async (req, res) => {
+    try {
+  
+      // Fetch published content from the database for the given creatorId
+      const queryResult = await db.query(
+        `SELECT * FROM posts 
+        WHERE creator_user_uuid = $1`,
+        [req.params.creatorId]
+      );
+
+      // Handle queryResult, send response, etc.
+  
+    } catch (error) {
+      // Handle error
+      console.error("Error fetching posts:", error);
+      res.status(500).send("Error fetching posts");
+    }
+});
+
 // Route for liking post
 router.post("/post/like/:postId", upload.fields([]), async (req, res) => {
   try {
