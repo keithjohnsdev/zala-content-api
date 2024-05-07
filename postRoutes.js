@@ -84,34 +84,12 @@ router.post("/posts/forYou", upload.none(), async (req, res) => {
     }
 });
 
-// Route for listing posts by superusers ("app content view For You")
-router.post("/posts/bySuperusers", upload.none(), async (req, res) => {
+// Route for "Browse All" view, all public content
+router.post("/posts/browseAll", async (req, res) => {
     try {
-        const { creatorIds } = req.body;
-
-        // Parse JSON string to array if needed
-        const parsedIds =
-            typeof creatorIds === "string"
-                ? JSON.parse(creatorIds)
-                : creatorIds;
-
-        // Ensure parsedIds is an array
-        if (!Array.isArray(parsedIds)) {
-            return res
-                .status(400)
-                .json({ error: "creatorIds must be an array" });
-        }
-
         // Fetch published content from the database for the given creatorIds
-        const queryResult = await db.query(
-            `SELECT * FROM posts 
-      WHERE creator_user_uuid IN (${parsedIds
-          .map((id, index) => `$${index + 1}`)
-          .join(", ")})
-      AND scheduled = false
-      AND post_time < NOW()`,
-            parsedIds
-        );
+        const queryResult = await db.query(`SELECT * FROM zala_public
+        ORDER BY post_time DESC`);
 
         // Extract the rows from the query result
         const contentList = queryResult.rows;
@@ -130,7 +108,7 @@ router.get("/posts/:creatorId", async (req, res) => {
         const queryResult = await db.query(
             `SELECT * FROM posts 
             WHERE creator_user_uuid = $1
-            ORDER BY post_id DESC`, // Add ORDER BY clause to sort by post_id descending
+            ORDER BY post_time DESC`, // Add ORDER BY clause to sort by post_id descending
             [req.params.creatorId]
         );
 
