@@ -88,8 +88,9 @@ router.post("/posts/forYou", upload.none(), async (req, res) => {
 router.post("/posts/browseAll", async (req, res) => {
     try {
         // Fetch published content from the database for the given creatorIds
-        const queryResult = await db.query(`SELECT * FROM zala_public
-        ORDER BY post_time DESC`);
+        const queryResult = await db.query(
+            `SELECT * FROM zala_public ORDER BY created_at DESC`
+        );
 
         // Extract the rows from the query result
         const contentList = queryResult.rows;
