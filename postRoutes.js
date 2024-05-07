@@ -15,6 +15,39 @@ const s3 = new S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
+// Route for listing posts by superusers
+router.post("/posts/bySuperusers", upload.none(), async (req, res) => {
+  try {
+    const { creatorIds } = req.body;
+
+    // Parse JSON string to array if needed
+    const parsedIds =
+      typeof creatorIds === "string" ? JSON.parse(creatorIds) : creatorIds;
+
+    // Ensure parsedIds is an array
+    if (!Array.isArray(parsedIds)) {
+      return res.status(400).json({ error: "creatorIds must be an array" });
+    }
+
+    // Fetch published content from the database for the given creatorIds
+    const queryResult = await db.query(
+      `SELECT * FROM posts 
+      WHERE creator_user_uuid IN (${parsedIds.map((id, index) => `$${index + 1}`).join(", ")})
+      AND scheduled = false
+      AND scheduled_time < NOW()`,
+      parsedIds
+    );
+
+    // Extract the rows from the query result
+    const contentList = queryResult.rows;
+
+    res.status(200).json(contentList);
+  } catch (error) {
+    console.error("Error fetching content:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Route for liking post
 router.post("/post/like/:postId", upload.fields([]), async (req, res) => {
   try {
