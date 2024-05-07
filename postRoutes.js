@@ -152,6 +152,11 @@ router.post("/post/like/:postId", upload.fields([]), async (req, res) => {
             );
 
             await db.query(
+                `UPDATE zala_public SET dislikes = COALESCE(dislikes, 0) - 1 WHERE post_id = $1`,
+                [postIdInt]
+            );
+
+            await db.query(
                 `UPDATE users SET dislikes = array_remove(dislikes, $1) WHERE user_uuid = $2`,
                 [postIdInt, userId]
             );
@@ -161,6 +166,11 @@ router.post("/post/like/:postId", upload.fields([]), async (req, res) => {
         if (!likedPostIds.includes(postIdInt)) {
             await db.query(
                 `UPDATE posts SET likes = COALESCE(likes, 0) + 1 WHERE post_id = $1`,
+                [postIdInt]
+            );
+
+            await db.query(
+                `UPDATE zala_public SET likes = COALESCE(likes, 0) + 1 WHERE post_id = $1`,
                 [postIdInt]
             );
 
@@ -204,6 +214,11 @@ router.post("/post/dislike/:postId", upload.fields([]), async (req, res) => {
             );
 
             await db.query(
+                `UPDATE zala_public SET likes = COALESCE(likes, 0) - 1 WHERE post_id = $1`,
+                [postIdInt]
+            );
+
+            await db.query(
                 `UPDATE users SET likes = array_remove(likes, $1) WHERE user_uuid = $2`,
                 [postIdInt, userId]
             );
@@ -213,6 +228,11 @@ router.post("/post/dislike/:postId", upload.fields([]), async (req, res) => {
         if (!dislikedPostIds.includes(postIdInt)) {
             await db.query(
                 `UPDATE posts SET dislikes = COALESCE(dislikes, 0) + 1 WHERE post_id = $1`,
+                [postIdInt]
+            );
+
+            await db.query(
+                `UPDATE zala_public SET dislikes = COALESCE(dislikes, 0) + 1 WHERE post_id = $1`,
                 [postIdInt]
             );
 
@@ -251,6 +271,11 @@ router.post("/post/view/:postId", upload.fields([]), async (req, res) => {
         if (!viewedPostIds.includes(postIdInt)) {
             await db.query(
                 `UPDATE posts SET views = COALESCE(views, 0) + 1 WHERE post_id = $1`,
+                [postIdInt]
+            );
+
+            await db.query(
+                `UPDATE zala_public SET views = COALESCE(views, 0) + 1 WHERE post_id = $1`,
                 [postIdInt]
             );
 
