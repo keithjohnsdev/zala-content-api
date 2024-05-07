@@ -15,8 +15,8 @@ const s3 = new S3({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-// Route for "browse all" view (Zala public from all superusers and content from subscribed superusers)
-router.post("/posts/browseAll", upload.none(), async (req, res) => {
+// Route for "for you" view (Zala public from all superusers and content from subscribed superusers)
+router.post("/posts/forYou", upload.none(), async (req, res) => {
     try {
         const { creatorIds } = req.body;
 
@@ -44,8 +44,14 @@ router.post("/posts/browseAll", upload.none(), async (req, res) => {
             parsedIds
         );
 
-        // Fetch all zala public content
-        const zalaPublicQuery = await db.query(`SELECT * FROM zala_public`);
+        // Fetch all zala public content from the given creatorIds
+        const zalaPublicQuery = await db.query(
+            `SELECT * FROM zala_public 
+        WHERE creator_user_uuid IN (${parsedIds
+            .map((id, index) => `$${index + 1}`)
+            .join(", ")})`,
+            parsedIds
+        );
 
         // Extract the rows from the query result
         const subscribedList = subscribedListQuery.rows;
