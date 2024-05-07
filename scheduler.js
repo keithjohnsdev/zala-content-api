@@ -11,6 +11,7 @@ async function publishContent() {
     );
 
     const scheduledContent = queryResult.rows;
+    console.log(scheduledContent[0]);
 
     // Log the number of items ready to publish
     console.log(
@@ -22,13 +23,62 @@ async function publishContent() {
       const postId = content.post_id;
 
       // Update content table
-      await db.query("UPDATE content SET scheduled = $1 WHERE content_id = $2", [false, content.content_id]);
+      await db.query(
+        "UPDATE content SET scheduled = $1 WHERE content_id = $2",
+        [false, content.content_id]
+      );
 
       // Update posts table
       await db.query("UPDATE posts SET scheduled = $1 WHERE post_id = $2", [
         false,
         postId,
       ]);
+
+      // Check if "public" exists in parsedAccessibility
+      const isPublic = content.accessibility.includes("public");
+
+      // If "public" exists, insert into zala_public
+      if (isPublic) {
+        try {
+          // Insert new row into zala_public table
+          await db.query(
+            `INSERT INTO zala_public (
+                  title, 
+                  description, 
+                  s3_video_url, 
+                  s3_thumbnail, 
+                  created_at, 
+                  updated_at, 
+                  creator_user_uuid, 
+                  creator_name, 
+                  creator_profile_url, 
+                  tags, 
+                  org_id, 
+                  description_markup,
+                  content_id
+              )
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+            [
+              content.title,
+              content.description,
+              content.s3_video_url,
+              content.s3_thumbnail,
+              new Date(),
+              new Date(),
+              content.creator_user_uuid,
+              content.creator_name,
+              content.creator_profile_url,
+              content.tags,
+              content.org_id,
+              content.description_markup,
+              content.content_id,
+            ]
+          );
+        } catch (error) {
+          console.error("Error inserting into zala_public table:", error);
+          throw error;
+        }
+      }
     }
 
     console.log("Content publishing task executed successfully.");
