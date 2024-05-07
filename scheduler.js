@@ -55,9 +55,10 @@ async function publishContent() {
                   tags, 
                   org_id, 
                   description_markup,
-                  content_id
+                  content_id,
+                  post_id
               )
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
             [
               content.title,
               content.description,
@@ -72,6 +73,7 @@ async function publishContent() {
               content.org_id,
               content.description_markup,
               content.content_id,
+              content.post_id
             ]
           );
         } catch (error) {

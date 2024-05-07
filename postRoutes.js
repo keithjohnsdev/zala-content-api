@@ -50,12 +50,22 @@ router.post("/posts/browseAll", upload.none(), async (req, res) => {
     const zalaPublicList = zalaPublicQuery.rows;
 
     // Concatenate the two arrays
-    const combinedList = [...subscribedList, ...zalaPublicList];
+    let combinedList = [...subscribedList, ...zalaPublicList];
+
+    // Remove duplicates based on post_id
+    const uniquePostIds = new Set();
+    combinedList = combinedList.filter((item) => {
+      if (!uniquePostIds.has(item.post_id)) {
+        uniquePostIds.add(item.post_id);
+        return true;
+      }
+      return false;
+    });
 
     // Sort the combined array by post_time in descending order
     combinedList.sort((a, b) => new Date(b.post_time) - new Date(a.post_time));
 
-    // Now combinedList contains both sets of rows sorted by post_time
+    // Now combinedList contains both sets of rows sorted by post_time without duplicates
 
     res.status(200).json(combinedList);
   } catch (error) {
