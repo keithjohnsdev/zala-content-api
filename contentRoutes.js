@@ -350,9 +350,11 @@ router.post("/content/bySuperusers", upload.none(), async (req, res) => {
 
     // Fetch published content from the database for the given creatorIds
     const queryResult = await db.query(
-      `SELECT * FROM content WHERE creator_user_uuid IN (${parsedIds
-        .map((id, index) => `$${index + 1}`)
-        .join(", ")}) AND status = 'published'`,
+      `SELECT * FROM content 
+      WHERE creator_user_uuid IN (${parsedIds.map((id, index) => `$${index + 1}`).join(", ")})
+      AND scheduled = false
+      AND scheduled_time < NOW()
+      AND array_length(posts, 1) > 0`,
       parsedIds
     );
 
