@@ -49,7 +49,7 @@ router.post("/posts/browseAll", upload.none(), async (req, res) => {
 
     // Concatenate the two arrays
     let combinedList = [...subscribedList, ...zalaPublicList];
-
+    console.log(combinedList);
     // Remove duplicates based on post_id
     const uniquePostIds = new Set();
     combinedList = combinedList.filter((item) => {
