@@ -84,41 +84,44 @@ router.post("/posts/forYou", upload.none(), async (req, res) => {
     }
 });
 
-router.get('/posts/browseAll', async (req, res) => {
+router.get("/posts/browseAll", async (req, res) => {
     try {
         // Step 1: Extract User UUID
         const userId = req.headers.authorization;
 
         // Step 2: Retrieve Data from Database
-        const publicPostsQuery = await db.query('SELECT * FROM zala_public');
+        const publicPostsQuery = await db.query("SELECT * FROM zala_public");
         const userInteractionsQuery = await db.query(
-            'SELECT * FROM interactions WHERE user_uuid = $1',
+            "SELECT * FROM interactions WHERE user_uuid = $1",
             [userId]
         );
         const userInteractions = userInteractionsQuery.rows;
 
         // Step 3: Create a Hash for Faster Lookup
         const interactionsHash = {};
-        userInteractions.forEach(interaction => {
+        userInteractions.forEach((interaction) => {
             interactionsHash[interaction.post_id] = interaction;
         });
 
         // Step 4: Update Posts with Interaction Data
-        const publicPosts = publicPostsQuery.rows.map(post => {
+        const publicPosts = publicPostsQuery.rows.map((post) => {
             const interaction = interactionsHash[post.post_id];
             return {
                 ...post,
                 liked: interaction ? interaction.liked : false,
                 disliked: interaction ? interaction.disliked : false,
-                viewed: interaction ? interaction.viewed : false
+                viewed: interaction ? interaction.viewed : false,
             };
         });
 
         // Step 5: Return Updated Array
-        res.status(200).json(publicPosts);
+        const sortedPublicPosts = publicPosts.sort(
+            (a, b) => b.post_time - a.post_time
+        );
+        res.status(200).json(sortedPublicPosts);
     } catch (error) {
-        console.error('Error retrieving public posts:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error("Error retrieving public posts:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
 });
 
@@ -278,7 +281,6 @@ router.post("/post/dislike/:postId", async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 });
-
 
 // Route for handling post views
 router.post("/post/view/:postId", upload.fields([]), async (req, res) => {
