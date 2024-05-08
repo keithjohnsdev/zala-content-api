@@ -126,7 +126,7 @@ router.get("/posts/:creatorId", async (req, res) => {
 });
 
 // Route for liking post
-router.post("/post/like/:postId", upload.fields([]), async (req, res) => {
+router.post("/post/like/:postId", async (req, res) => {
     try {
         const { postId } = req.params;
         const userId = req.headers.authorization; // Extract userId from the Authorization header
@@ -185,7 +185,7 @@ router.post("/post/like/:postId", upload.fields([]), async (req, res) => {
 });
 
 // Route for disliking post
-router.post("/post/dislike/:postId", upload.fields([]), async (req, res) => {
+router.post("/post/dislike/:postId", async (req, res) => {
     try {
         const { postId } = req.params;
         const userId = req.headers.authorization; // Extract userId from the Authorization header
@@ -239,6 +239,45 @@ router.post("/post/dislike/:postId", upload.fields([]), async (req, res) => {
         }
     } catch (error) {
         console.error("Error disliking post:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+// Route for handling post views
+router.post("/post/view/:postId", async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const userId = req.headers.authorization; // Extract userId from the Authorization header
+
+        // Convert postId to integer
+        const postIdInt = parseInt(postId);
+
+        // Check if the user has already viewed the post
+        const existingViewInteraction = await db.query(
+            `SELECT * FROM interactions WHERE user_uuid = $1 AND post_id = $2 AND viewed = true`,
+            [userId, postIdInt]
+        );
+
+        // If the user has not already viewed the post, insert a new view interaction
+        if (existingViewInteraction.rows.length === 0) {
+            // Insert a new view interaction
+            await db.query(
+                `INSERT INTO interactions (user_uuid, post_id, viewed) VALUES ($1, $2, true)`,
+                [userId, postIdInt]
+            );
+
+            // Increment views for the post
+            await db.query(
+                `UPDATE posts SET views = COALESCE(views, 0) + 1 WHERE post_id = $1`,
+                [postIdInt]
+            );
+
+            res.status(200).json({ message: "Post viewed" });
+        } else {
+            res.status(200).json({ message: "Post already viewed" });
+        }
+    } catch (error) {
+        console.error("Error handling post view:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 });
@@ -369,50 +408,50 @@ router.post("/post/dislike/:postId", upload.fields([]), async (req, res) => {
 // });
 
 
-// Route for handling post views
-router.post("/post/view/:postId", upload.fields([]), async (req, res) => {
-    try {
-        const { postId } = req.params;
-        const { userId } = req.body;
+// Route for handling post views, 1st implementation
+// router.post("/post/view/:postId", upload.fields([]), async (req, res) => {
+//     try {
+//         const { postId } = req.params;
+//         const { userId } = req.body;
 
-        // Convert postId to integer
-        const postIdInt = parseInt(postId);
+//         // Convert postId to integer
+//         const postIdInt = parseInt(postId);
 
-        // Check if the user has already viewed the post
-        const userViewsQuery = await db.query(
-            `SELECT views FROM users WHERE user_uuid = $1`,
-            [userId]
-        );
+//         // Check if the user has already viewed the post
+//         const userViewsQuery = await db.query(
+//             `SELECT views FROM users WHERE user_uuid = $1`,
+//             [userId]
+//         );
 
-        const { views } = userViewsQuery.rows[0];
-        const viewedPostIds = views || [];
+//         const { views } = userViewsQuery.rows[0];
+//         const viewedPostIds = views || [];
 
-        // If the postId is not in the views array, increment views for the post
-        if (!viewedPostIds.includes(postIdInt)) {
-            await db.query(
-                `UPDATE posts SET views = COALESCE(views, 0) + 1 WHERE post_id = $1`,
-                [postIdInt]
-            );
+//         // If the postId is not in the views array, increment views for the post
+//         if (!viewedPostIds.includes(postIdInt)) {
+//             await db.query(
+//                 `UPDATE posts SET views = COALESCE(views, 0) + 1 WHERE post_id = $1`,
+//                 [postIdInt]
+//             );
 
-            await db.query(
-                `UPDATE zala_public SET views = COALESCE(views, 0) + 1 WHERE post_id = $1`,
-                [postIdInt]
-            );
+//             await db.query(
+//                 `UPDATE zala_public SET views = COALESCE(views, 0) + 1 WHERE post_id = $1`,
+//                 [postIdInt]
+//             );
 
-            // Update views array for the user
-            await db.query(
-                `UPDATE users SET views = array_append(views, $1) WHERE user_uuid = $2`,
-                [postIdInt, userId]
-            );
+//             // Update views array for the user
+//             await db.query(
+//                 `UPDATE users SET views = array_append(views, $1) WHERE user_uuid = $2`,
+//                 [postIdInt, userId]
+//             );
 
-            res.status(200).json({ message: "Post viewed" });
-        } else {
-            res.status(200).json({ message: "Post already viewed" });
-        }
-    } catch (error) {
-        console.error("Error handling post view:", error);
-        res.status(500).json({ error: "Internal server error" });
-    }
-});
+//             res.status(200).json({ message: "Post viewed" });
+//         } else {
+//             res.status(200).json({ message: "Post already viewed" });
+//         }
+//     } catch (error) {
+//         console.error("Error handling post view:", error);
+//         res.status(500).json({ error: "Internal server error" });
+//     }
+// });
 
 module.exports = router;
