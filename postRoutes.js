@@ -254,6 +254,12 @@ router.post("/post/view/:postId", upload.fields([]), async (req, res) => {
                 [userId, postIdInt]
             );
 
+            // Increment views for the post
+            await db.query(
+                `UPDATE posts SET views = COALESCE(views, 0) + 1 WHERE post_id = $1`,
+                [postIdInt]
+            );
+
             res.status(200).json({ message: "Post viewed" });
         } else {
             // If the user has already viewed the post, return a response indicating so
