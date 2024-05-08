@@ -125,6 +125,125 @@ router.get("/posts/:creatorId", async (req, res) => {
     }
 });
 
+// Route for liking post
+router.post("/post/like/:postId", upload.fields([]), async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const userId = req.headers.authorization; // Extract userId from the Authorization header
+
+        // Convert postId to integer
+        const postIdInt = parseInt(postId);
+
+        // Check if the user has already disliked the post
+        const existingDislikeInteraction = await db.query(
+            `SELECT * FROM interactions WHERE user_uuid = $1 AND post_id = $2 AND disliked = true`,
+            [userId, postIdInt]
+        );
+
+        // If the user had previously disliked the post, delete the dislike interaction
+        if (existingDislikeInteraction.rows.length > 0) {
+            await db.query(
+                `DELETE FROM interactions WHERE user_uuid = $1 AND post_id = $2 AND disliked = true`,
+                [userId, postIdInt]
+            );
+
+            // Decrement dislikes for the post
+            await db.query(
+                `UPDATE posts SET dislikes = COALESCE(dislikes, 0) - 1 WHERE post_id = $1`,
+                [postIdInt]
+            );
+        }
+
+        // Check if the user has already liked the post
+        const existingLikeInteraction = await db.query(
+            `SELECT * FROM interactions WHERE user_uuid = $1 AND post_id = $2 AND liked = true`,
+            [userId, postIdInt]
+        );
+
+        // If the user has not already liked the post, insert a new like interaction
+        if (existingLikeInteraction.rows.length === 0) {
+            // Insert a new like interaction
+            await db.query(
+                `INSERT INTO interactions (user_uuid, post_id, liked) VALUES ($1, $2, true)`,
+                [userId, postIdInt]
+            );
+
+            // Increment likes for the post
+            await db.query(
+                `UPDATE posts SET likes = COALESCE(likes, 0) + 1 WHERE post_id = $1`,
+                [postIdInt]
+            );
+
+            res.status(200).json({ message: "Post liked" });
+        } else {
+            res.status(200).json({ message: "Post already liked" });
+        }
+    } catch (error) {
+        console.error("Error liking post:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+// Route for disliking post
+router.post("/post/dislike/:postId", upload.fields([]), async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const userId = req.headers.authorization; // Extract userId from the Authorization header
+
+        // Convert postId to integer
+        const postIdInt = parseInt(postId);
+
+        // Check if the user has already liked the post
+        const existingLikeInteraction = await db.query(
+            `SELECT * FROM interactions WHERE user_uuid = $1 AND post_id = $2 AND liked = true`,
+            [userId, postIdInt]
+        );
+
+        // If the user had previously liked the post, delete the like interaction
+        if (existingLikeInteraction.rows.length > 0) {
+            await db.query(
+                `DELETE FROM interactions WHERE user_uuid = $1 AND post_id = $2 AND liked = true`,
+                [userId, postIdInt]
+            );
+
+            // Decrement likes for the post
+            await db.query(
+                `UPDATE posts SET likes = COALESCE(likes, 0) - 1 WHERE post_id = $1`,
+                [postIdInt]
+            );
+        }
+
+        // Check if the user has already disliked the post
+        const existingDislikeInteraction = await db.query(
+            `SELECT * FROM interactions WHERE user_uuid = $1 AND post_id = $2 AND disliked = true`,
+            [userId, postIdInt]
+        );
+
+        // If the user has not already disliked the post, insert a new dislike interaction
+        if (existingDislikeInteraction.rows.length === 0) {
+            // Insert a new dislike interaction
+            await db.query(
+                `INSERT INTO interactions (user_uuid, post_id, disliked) VALUES ($1, $2, true)`,
+                [userId, postIdInt]
+            );
+
+            // Increment dislikes for the post
+            await db.query(
+                `UPDATE posts SET dislikes = COALESCE(dislikes, 0) + 1 WHERE post_id = $1`,
+                [postIdInt]
+            );
+
+            res.status(200).json({ message: "Post disliked" });
+        } else {
+            res.status(200).json({ message: "Post already disliked" });
+        }
+    } catch (error) {
+        console.error("Error disliking post:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+
 // Route for liking post, 1st implementation
 // router.post("/post/like/:postId", upload.fields([]), async (req, res) => {
 //     try {
@@ -187,59 +306,6 @@ router.get("/posts/:creatorId", async (req, res) => {
 //     }
 // });
 
-// Route for liking post
-router.post("/post/like/:postId", upload.fields([]), async (req, res) => {
-    try {
-        const { postId } = req.params;
-        const userId = req.headers.authorization; // Extract userId from the Authorization header
-
-        // Convert postId to integer
-        const postIdInt = parseInt(postId);
-
-        // Check if the user has already disliked the post
-        const existingDislikeInteraction = await db.query(
-            `SELECT * FROM interactions WHERE user_uuid = $1 AND post_id = $2 AND disliked = true`,
-            [userId, postIdInt]
-        );
-
-        // If the user had previously disliked the post, decrement dislikes by 1
-        if (existingDislikeInteraction.rows.length > 0) {
-            await db.query(
-                `UPDATE posts SET dislikes = COALESCE(dislikes, 0) - 1 WHERE post_id = $1`,
-                [postIdInt]
-            );
-        }
-
-        // Check if the user has already liked the post
-        const existingLikeInteraction = await db.query(
-            `SELECT * FROM interactions WHERE user_uuid = $1 AND post_id = $2 AND liked = true`,
-            [userId, postIdInt]
-        );
-
-        // If the user has not already liked the post, insert a new like interaction
-        if (existingLikeInteraction.rows.length === 0) {
-            // Insert a new like interaction
-            await db.query(
-                `INSERT INTO interactions (user_uuid, post_id, liked) VALUES ($1, $2, true)`,
-                [userId, postIdInt]
-            );
-
-            // Increment likes for the post
-            await db.query(
-                `UPDATE posts SET likes = COALESCE(likes, 0) + 1 WHERE post_id = $1`,
-                [postIdInt]
-            );
-
-            res.status(200).json({ message: "Post liked" });
-        } else {
-            res.status(200).json({ message: "Post already liked" });
-        }
-    } catch (error) {
-        console.error("Error liking post:", error);
-        res.status(500).json({ error: "Internal server error" });
-    }
-});
-
 // Route for disliking post, 1st implementation
 // router.post("/post/dislike/:postId", upload.fields([]), async (req, res) => {
 //     try {
@@ -301,59 +367,6 @@ router.post("/post/like/:postId", upload.fields([]), async (req, res) => {
 //         res.status(500).json({ error: "Internal server error" });
 //     }
 // });
-
-// Route for disliking post
-router.post("/post/dislike/:postId", upload.fields([]), async (req, res) => {
-    try {
-        const { postId } = req.params;
-        const userId = req.headers.authorization; // Extract userId from the Authorization header
-
-        // Convert postId to integer
-        const postIdInt = parseInt(postId);
-
-        // Check if the user has already liked the post
-        const existingLikeInteraction = await db.query(
-            `SELECT * FROM interactions WHERE user_uuid = $1 AND post_id = $2 AND liked = true`,
-            [userId, postIdInt]
-        );
-
-        // If the user had previously liked the post, decrement likes by 1
-        if (existingLikeInteraction.rows.length > 0) {
-            await db.query(
-                `UPDATE posts SET likes = COALESCE(likes, 0) - 1 WHERE post_id = $1`,
-                [postIdInt]
-            );
-        }
-
-        // Check if the user has already disliked the post
-        const existingDislikeInteraction = await db.query(
-            `SELECT * FROM interactions WHERE user_uuid = $1 AND post_id = $2 AND disliked = true`,
-            [userId, postIdInt]
-        );
-
-        // If the user has not already disliked the post, insert a new dislike interaction
-        if (existingDislikeInteraction.rows.length === 0) {
-            // Insert a new dislike interaction
-            await db.query(
-                `INSERT INTO interactions (user_uuid, post_id, disliked) VALUES ($1, $2, true)`,
-                [userId, postIdInt]
-            );
-
-            // Increment dislikes for the post
-            await db.query(
-                `UPDATE posts SET dislikes = COALESCE(dislikes, 0) + 1 WHERE post_id = $1`,
-                [postIdInt]
-            );
-
-            res.status(200).json({ message: "Post disliked" });
-        } else {
-            res.status(200).json({ message: "Post already disliked" });
-        }
-    } catch (error) {
-        console.error("Error disliking post:", error);
-        res.status(500).json({ error: "Internal server error" });
-    }
-});
 
 
 // Route for handling post views
