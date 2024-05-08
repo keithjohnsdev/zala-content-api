@@ -125,62 +125,115 @@ router.get("/posts/:creatorId", async (req, res) => {
     }
 });
 
+// Route for liking post, 1st implementation
+// router.post("/post/like/:postId", upload.fields([]), async (req, res) => {
+//     try {
+//         const { postId } = req.params;
+//         const { userId } = req.body;
+
+//         // Convert postId to integer
+//         const postIdInt = parseInt(postId);
+
+//         // Check if the user has already liked or disliked the post
+//         const userLikesQuery = await db.query(
+//             `SELECT likes, dislikes FROM users WHERE user_uuid = $1`,
+//             [userId]
+//         );
+
+//         const { likes, dislikes } = userLikesQuery.rows[0];
+//         const likedPostIds = likes || [];
+//         const dislikedPostIds = dislikes || [];
+
+//         // If the postId is already in the dislikes array, decrement dislikes and remove it from dislikes array
+//         if (dislikedPostIds.includes(postIdInt)) {
+//             await db.query(
+//                 `UPDATE posts SET dislikes = COALESCE(dislikes, 0) - 1 WHERE post_id = $1`,
+//                 [postIdInt]
+//             );
+
+//             await db.query(
+//                 `UPDATE zala_public SET dislikes = COALESCE(dislikes, 0) - 1 WHERE post_id = $1`,
+//                 [postIdInt]
+//             );
+
+//             await db.query(
+//                 `UPDATE users SET dislikes = array_remove(dislikes, $1) WHERE user_uuid = $2`,
+//                 [postIdInt, userId]
+//             );
+//         }
+
+//         // If the postId is not in the likes array, increment likes and add it to likes array
+//         if (!likedPostIds.includes(postIdInt)) {
+//             await db.query(
+//                 `UPDATE posts SET likes = COALESCE(likes, 0) + 1 WHERE post_id = $1`,
+//                 [postIdInt]
+//             );
+
+//             await db.query(
+//                 `UPDATE zala_public SET likes = COALESCE(likes, 0) + 1 WHERE post_id = $1`,
+//                 [postIdInt]
+//             );
+
+//             await db.query(
+//                 `UPDATE users SET likes = array_append(likes, $1) WHERE user_uuid = $2`,
+//                 [postIdInt, userId]
+//             );
+//         }
+
+//         res.status(200).json({ message: "Post liked" });
+//     } catch (error) {
+//         console.error("Error liking post:", error);
+//         res.status(500).json({ error: "Internal server error" });
+//     }
+// });
+
 // Route for liking post
 router.post("/post/like/:postId", upload.fields([]), async (req, res) => {
     try {
         const { postId } = req.params;
-        const { userId } = req.body;
+        const userId = req.headers.authorization; // Extract userId from the Authorization header
 
         // Convert postId to integer
         const postIdInt = parseInt(postId);
 
-        // Check if the user has already liked or disliked the post
-        const userLikesQuery = await db.query(
-            `SELECT likes, dislikes FROM users WHERE user_uuid = $1`,
-            [userId]
+        // Check if the user has already disliked the post
+        const existingDislikeInteraction = await db.query(
+            `SELECT * FROM interactions WHERE user_uuid = $1 AND post_id = $2 AND disliked = true`,
+            [userId, postIdInt]
         );
 
-        const { likes, dislikes } = userLikesQuery.rows[0];
-        const likedPostIds = likes || [];
-        const dislikedPostIds = dislikes || [];
-
-        // If the postId is already in the dislikes array, decrement dislikes and remove it from dislikes array
-        if (dislikedPostIds.includes(postIdInt)) {
+        // If the user had previously disliked the post, decrement dislikes by 1
+        if (existingDislikeInteraction.rows.length > 0) {
             await db.query(
                 `UPDATE posts SET dislikes = COALESCE(dislikes, 0) - 1 WHERE post_id = $1`,
                 [postIdInt]
             );
-
-            await db.query(
-                `UPDATE zala_public SET dislikes = COALESCE(dislikes, 0) - 1 WHERE post_id = $1`,
-                [postIdInt]
-            );
-
-            await db.query(
-                `UPDATE users SET dislikes = array_remove(dislikes, $1) WHERE user_uuid = $2`,
-                [postIdInt, userId]
-            );
         }
 
-        // If the postId is not in the likes array, increment likes and add it to likes array
-        if (!likedPostIds.includes(postIdInt)) {
+        // Check if the user has already liked the post
+        const existingLikeInteraction = await db.query(
+            `SELECT * FROM interactions WHERE user_uuid = $1 AND post_id = $2 AND liked = true`,
+            [userId, postIdInt]
+        );
+
+        // If the user has not already liked the post, insert a new like interaction
+        if (existingLikeInteraction.rows.length === 0) {
+            // Insert a new like interaction
+            await db.query(
+                `INSERT INTO interactions (user_uuid, post_id, liked) VALUES ($1, $2, true)`,
+                [userId, postIdInt]
+            );
+
+            // Increment likes for the post
             await db.query(
                 `UPDATE posts SET likes = COALESCE(likes, 0) + 1 WHERE post_id = $1`,
                 [postIdInt]
             );
 
-            await db.query(
-                `UPDATE zala_public SET likes = COALESCE(likes, 0) + 1 WHERE post_id = $1`,
-                [postIdInt]
-            );
-
-            await db.query(
-                `UPDATE users SET likes = array_append(likes, $1) WHERE user_uuid = $2`,
-                [postIdInt, userId]
-            );
+            res.status(200).json({ message: "Post liked" });
+        } else {
+            res.status(200).json({ message: "Post already liked" });
         }
-
-        res.status(200).json({ message: "Post liked" });
     } catch (error) {
         console.error("Error liking post:", error);
         res.status(500).json({ error: "Internal server error" });
