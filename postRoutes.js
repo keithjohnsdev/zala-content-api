@@ -20,6 +20,9 @@ router.post("/posts/forYou", upload.none(), async (req, res) => {
     try {
         const { creatorIds } = req.body;
 
+        // Step 1: Extract User UUID
+        const userId = req.headers.authorization;
+
         // Parse JSON string to array if needed
         const parsedIds =
             typeof creatorIds === "string"
