@@ -140,37 +140,50 @@ router.post("/post/like/:postId", async (req, res) => {
             [userId, postIdInt]
         );
 
-        // If the user had previously disliked the post, negate the dislike interaction
-        if (existingInteraction.rows[0].disliked) {
-            await db.query(
-                `UPDATE interactions SET disliked = false WHERE user_uuid = $1 AND post_id = $2`,
-                [userId, postIdInt]
-            );
+        if (existingInteraction.rows.length > 0) {
+            // If the user had previously disliked the post, negate the dislike interaction
+            if (existingInteraction.rows[0].disliked) {
+                await db.query(
+                    `UPDATE interactions SET disliked = false WHERE user_uuid = $1 AND post_id = $2`,
+                    [userId, postIdInt]
+                );
 
-            // Decrement dislikes for the post on posts and zala_public table
-            await db.query(
-                `UPDATE posts SET dislikes = COALESCE(dislikes, 0) - 1 WHERE post_id = $1`,
-                [postIdInt]
-            );
-        }
+                // Decrement dislikes for the post on posts and zala_public table
+                await db.query(
+                    `UPDATE posts SET dislikes = COALESCE(dislikes, 0) - 1 WHERE post_id = $1`,
+                    [postIdInt]
+                );
+            }
 
-        // If the user has not already liked the post, set liked to true on interactions
-        if (!existingInteraction.rows[0].liked) {
-            // Insert a new like interaction
-            await db.query(
-                `UPDATE interactions SET liked = true WHERE user_uuid = $1 AND post_id = $2`,
-                [userId, postIdInt]
-            );
+            // If the user has not already liked the post, set liked to true on interactions
+            if (!existingInteraction.rows[0].liked) {
+                // Insert a new like interaction
+                await db.query(
+                    `UPDATE interactions SET liked = true WHERE user_uuid = $1 AND post_id = $2`,
+                    [userId, postIdInt]
+                );
 
-            // Increment likes for the post
-            await db.query(
-                `UPDATE posts SET likes = COALESCE(likes, 0) + 1 WHERE post_id = $1`,
-                [postIdInt]
-            );
+                // Increment likes for the post
+                await db.query(
+                    `UPDATE posts SET likes = COALESCE(likes, 0) + 1 WHERE post_id = $1`,
+                    [postIdInt]
+                );
 
-            res.status(200).json({ message: "Post liked" });
+                res.status(200).json({ message: "Post liked" });
+            } else {
+                res.status(200).json({ message: "Post already liked" });
+            }
         } else {
-            res.status(200).json({ message: "Post already liked" });
+            await db.query(
+                `INSERT INTO interactions (user_uuid, post_id, liked, viewed) VALUES ($1, $2, true, true)`,
+                [userId, postIdInt]
+            );
+
+            // Increment views and likes for the post
+            await db.query(
+                `UPDATE posts SET likes = COALESCE(likes, 0) + 1, views = COALESCE(views, 0) + 1 WHERE post_id = $1`,
+                [postIdInt]
+            );
         }
     } catch (error) {
         console.error("Error liking post:", error);
@@ -193,37 +206,52 @@ router.post("/post/dislike/:postId", async (req, res) => {
             [userId, postIdInt]
         );
 
-        // If the user had previously liked the post, negate the like interaction
-        if (existingInteraction.rows[0].liked) {
+        if (existingInteraction.rows.length > 0) {
+            // If the user had previously liked the post, negate the like interaction
+            if (existingInteraction.rows[0].liked) {
+                await db.query(
+                    `UPDATE interactions SET liked = false WHERE user_uuid = $1 AND post_id = $2`,
+                    [userId, postIdInt]
+                );
+
+                // Decrement likes for the post
+                await db.query(
+                    `UPDATE posts SET likes = COALESCE(likes, 0) - 1 WHERE post_id = $1`,
+                    [postIdInt]
+                );
+            }
+
+            // If the user has not already disliked the post, set disliked to true on interactions
+            if (!existingInteraction.rows[0].disliked) {
+                // Insert a new dislike interaction
+                await db.query(
+                    `UPDATE interactions SET disliked = true WHERE user_uuid = $1 AND post_id = $2`,
+                    [userId, postIdInt]
+                );
+
+                // Increment dislikes for the post
+                await db.query(
+                    `UPDATE posts SET dislikes = COALESCE(dislikes, 0) + 1 WHERE post_id = $1`,
+                    [postIdInt]
+                );
+
+                res.status(200).json({ message: "Post disliked" });
+            } else {
+                res.status(200).json({ message: "Post already disliked" });
+            }
+        } else {
             await db.query(
-                `UPDATE interactions SET liked = false WHERE user_uuid = $1 AND post_id = $2`,
+                `INSERT INTO interactions (user_uuid, post_id, disliked, viewed) VALUES ($1, $2, true, true)`,
                 [userId, postIdInt]
             );
 
-            // Decrement likes for the post
+            // Increment views and dislikes for the post
             await db.query(
-                `UPDATE posts SET likes = COALESCE(likes, 0) - 1 WHERE post_id = $1`,
-                [postIdInt]
-            );
-        }
-
-        // If the user has not already disliked the post, set disliked to true on interactions
-        if (!existingInteraction.rows[0].disliked) {
-            // Insert a new dislike interaction
-            await db.query(
-                `UPDATE interactions SET disliked = true WHERE user_uuid = $1 AND post_id = $2`,
-                [userId, postIdInt]
-            );
-
-            // Increment dislikes for the post
-            await db.query(
-                `UPDATE posts SET dislikes = COALESCE(dislikes, 0) + 1 WHERE post_id = $1`,
+                `UPDATE posts SET dislikes = COALESCE(dislikes, 0) + 1, views = COALESCE(views, 0) + 1 WHERE post_id = $1`,
                 [postIdInt]
             );
 
             res.status(200).json({ message: "Post disliked" });
-        } else {
-            res.status(200).json({ message: "Post already disliked" });
         }
     } catch (error) {
         console.error("Error disliking post:", error);
