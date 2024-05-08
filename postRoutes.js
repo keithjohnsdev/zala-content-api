@@ -84,21 +84,41 @@ router.post("/posts/forYou", upload.none(), async (req, res) => {
     }
 });
 
-// Route for "Browse All" view, all public content
-router.get("/posts/browseAll", async (req, res) => {
+router.get('/posts/browseAll', async (req, res) => {
     try {
-        // Fetch published content from the database for the given creatorIds
-        const queryResult = await db.query(
-            `SELECT * FROM zala_public ORDER BY created_at DESC`
+        // Step 1: Extract User UUID
+        const userId = req.headers.authorization;
+
+        // Step 2: Retrieve Data from Database
+        const publicPostsQuery = await db.query('SELECT * FROM zala_public');
+        const userInteractionsQuery = await db.query(
+            'SELECT * FROM interactions WHERE user_uuid = $1',
+            [userId]
         );
+        const userInteractions = userInteractionsQuery.rows;
 
-        // Extract the rows from the query result
-        const contentList = queryResult.rows;
+        // Step 3: Create a Hash for Faster Lookup
+        const interactionsHash = {};
+        userInteractions.forEach(interaction => {
+            interactionsHash[interaction.post_id] = interaction;
+        });
 
-        res.status(200).json(contentList);
+        // Step 4: Update Posts with Interaction Data
+        const publicPosts = publicPostsQuery.rows.map(post => {
+            const interaction = interactionsHash[post.post_id];
+            return {
+                ...post,
+                liked: interaction ? interaction.liked : false,
+                disliked: interaction ? interaction.disliked : false,
+                viewed: interaction ? interaction.viewed : false
+            };
+        });
+
+        // Step 5: Return Updated Array
+        res.status(200).json(publicPosts);
     } catch (error) {
-        console.error("Error fetching content:", error);
-        res.status(500).json({ error: "Internal server error" });
+        console.error('Error retrieving public posts:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -298,6 +318,24 @@ router.post("/post/view/:postId", upload.fields([]), async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 });
+
+// Route for "Browse All" view, all public content, 1st implementation
+// router.get("/posts/browseAll", async (req, res) => {
+//     try {
+//         // Fetch published content from the database for the given creatorIds
+//         const queryResult = await db.query(
+//             `SELECT * FROM zala_public ORDER BY created_at DESC`
+//         );
+
+//         // Extract the rows from the query result
+//         const contentList = queryResult.rows;
+
+//         res.status(200).json(contentList);
+//     } catch (error) {
+//         console.error("Error fetching content:", error);
+//         res.status(500).json({ error: "Internal server error" });
+//     }
+// });
 
 // Route for liking post, 1st implementation
 // router.post("/post/like/:postId", upload.fields([]), async (req, res) => {
