@@ -44,40 +44,36 @@ router.post("/posts/forYou", upload.none(), async (req, res) => {
             parsedIds
         );
 
-        // Fetch all zala public content from the given creatorIds
-        const zalaPublicQuery = await db.query(
-            `SELECT * FROM zala_public 
-        WHERE creator_user_uuid IN (${parsedIds
-            .map((id, index) => `$${index + 1}`)
-            .join(", ")})`,
-            parsedIds
+        // Fetch user interactions from database
+        const userInteractionsQuery = await db.query(
+            "SELECT * FROM interactions WHERE user_uuid = $1",
+            [userId]
         );
+        const userInteractions = userInteractionsQuery.rows;
 
-        // Extract the rows from the query result
-        const subscribedList = subscribedListQuery.rows;
-        const zalaPublicList = zalaPublicQuery.rows;
-
-        // Concatenate the two arrays
-        let combinedList = [...subscribedList, ...zalaPublicList];
-        console.log(combinedList);
-        // Remove duplicates based on post_id
-        const uniquePostIds = new Set();
-        combinedList = combinedList.filter((item) => {
-            if (!uniquePostIds.has(item.post_id)) {
-                uniquePostIds.add(item.post_id);
-                return true;
-            }
-            return false;
+        // Step 3: Create a Hash for Faster Lookup
+        const interactionsHash = {};
+        userInteractions.forEach((interaction) => {
+            interactionsHash[interaction.post_id] = interaction;
         });
 
-        // Sort the combined array by post_time in descending order
-        combinedList.sort(
+        // Extract the rows from the query result
+        const subscribedList = subscribedListQuery.rows.map((post) => {
+            const interaction = interactionsHash[post.post_id];
+            return {
+                ...post,
+                liked: interaction ? interaction.liked : false,
+                disliked: interaction ? interaction.disliked : false,
+                viewed: interaction ? interaction.viewed : false,
+            };
+        });
+
+        // Sort the array by post_time in descending order
+        subscribedList.sort(
             (a, b) => new Date(b.post_time) - new Date(a.post_time)
         );
 
-        // Now combinedList contains both sets of rows sorted by post_time without duplicates
-        console.log(combinedList);
-        res.status(200).json(combinedList);
+        res.status(200).json(subscribedList);
     } catch (error) {
         console.error("Error fetching content:", error);
         res.status(500).json({ error: "Internal server error" });
