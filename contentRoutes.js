@@ -395,8 +395,8 @@ router.delete("/content/delete/:contentId", async (req, res) => {
     // Delete related entry from the zala_library table
     await db.query("DELETE FROM zala_library WHERE content_id = $1", [contentId]);
 
-    // Delete related entry from the zala_public table
-    await db.query("DELETE FROM zala_public WHERE content_id = $1", [contentId]);
+    // Delete related entry from the zala_public table (added a db trigger to keep it updated with posts instead)
+    // await db.query("DELETE FROM zala_public WHERE content_id = $1", [contentId]);
 
     // Delete video and thumbnail files from S3
     const deletePromises = Promise.all([

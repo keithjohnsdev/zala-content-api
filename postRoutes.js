@@ -147,7 +147,7 @@ router.post("/post/like/:postId", async (req, res) => {
                 [userId, postIdInt]
             );
 
-            // Decrement dislikes for the post
+            // Decrement dislikes for the post on posts and zala_public table
             await db.query(
                 `UPDATE posts SET dislikes = COALESCE(dislikes, 0) - 1 WHERE post_id = $1`,
                 [postIdInt]
