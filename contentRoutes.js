@@ -493,6 +493,8 @@ router.put(
         ? req.files["thumbnail"][0]
         : false;
 
+        console.log(req.user)
+
       // Parse the JSON arrays
       const parsedTags = JSON.parse(tags);
       const parsedAccessibility = JSON.parse(accessibility); // Parse accessibility as JSON
