@@ -96,7 +96,7 @@ router.post(
       const scheduledValue = scheduled === "true";
 
       // Handle undefined or empty string values for scheduled_time
-      const scheduledTime = scheduled_time;
+      const scheduledTime = scheduledValue ? scheduled_time : null;
       console.log(`type of scheduledTime: ${typeof scheduledTime}`);
       console.log(`scheduledTime: ${scheduledTime}`);
 
