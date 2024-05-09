@@ -14,7 +14,7 @@ app.use(cors());
 app.use((req, res, next) => {
     // Get the Authorization header
     console.log(req.headers)
-    const authHeader = req.headers['Authorization'];
+    const authHeader = req.headers['authorization'];
 
     console.log("auth header:",authHeader);
 
