@@ -10,7 +10,9 @@ const app = express();
 // Middleware function to extract and log JWT Bearer token
 app.use((req, res, next) => {
     // Get the Authorization header
-    const authHeader = req.headers['authorization'];
+    const authHeader = req.headers['Authorization'];
+
+    console.log(authHeader);
 
     // Check if the header exists and starts with 'Bearer '
     if (authHeader && authHeader.startsWith('Bearer ')) {
