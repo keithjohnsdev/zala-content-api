@@ -363,6 +363,50 @@ router.post("/post/removeFromSchedule/:postId", async (req, res) => {
     }
 });
 
+// Route for deleting posted post
+router.post("/post/removePost/:postId", async (req, res) => {
+    try {
+        const { postId } = req.params;
+
+        // Query the database to find the post by postId
+        const queryResult = await db.query(
+            "SELECT * FROM posts WHERE post_id = $1 LIMIT 1",
+            [postId]
+        );
+
+        // Check if content with the provided contentId exists
+        if (queryResult.rows.length === 0) {
+            return res.status(404).json({ error: "Post not found" });
+        }
+
+        // Variable to store the deleted post ID
+        let deletedPostId = null;
+
+        // Execute a DELETE query on the posts table
+        const deleteResult = await db.query(
+            "DELETE FROM posts WHERE post_id = $1 RETURNING post_id",
+            [postId]
+        );
+
+        // Check if any rows were deleted and set the deleted post_id
+        if (deleteResult.rows.length > 0) {
+            deletedPostId = deleteResult.rows[0].post_id;
+        }
+
+        // Update the content to remove the deleted post ID from the posts array
+        await db.query(
+            "UPDATE content SET posts = array_remove(posts, $1), WHERE content_id = $2",
+            [deletedPostId, contentId]
+        );
+
+        res.status(200).json({ message: "Post removed" });
+    } catch (error) {
+        console.error("Error removing post:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+
 // Route for "Browse All" view, all public content, 1st implementation
 // router.get("/posts/browseAll", async (req, res) => {
 //     try {
