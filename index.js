@@ -7,6 +7,9 @@ const jwt = require('jsonwebtoken');
 // Create a new Express application
 const app = express();
 
+// Use cors middleware to handle CORS headers
+app.use(cors());
+
 // Middleware function to extract and log JWT Bearer token
 app.use((req, res, next) => {
     // Get the Authorization header
@@ -45,9 +48,6 @@ app.use((req, res, next) => {
 
 // Middleware for parsing JSON bodies
 app.use(express.json());
-
-// Use cors middleware to handle CORS headers
-app.use(cors());
 
 // Define routes
 
