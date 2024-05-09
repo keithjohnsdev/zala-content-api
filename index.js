@@ -12,7 +12,7 @@ app.use((req, res, next) => {
     // Get the Authorization header
     const authHeader = req.headers['Authorization'];
 
-    console.log(authHeader);
+    console.log("auth header:",authHeader);
 
     // Check if the header exists and starts with 'Bearer '
     if (authHeader && authHeader.startsWith('Bearer ')) {
