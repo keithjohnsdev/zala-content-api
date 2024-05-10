@@ -37,6 +37,8 @@ app.use(async (req, res, next) => {
                         query {
                             me {
                                 id
+                                email
+                                fullName
                             }
                         }
                     `,
@@ -54,12 +56,16 @@ app.use(async (req, res, next) => {
 
             // Extract the userId from the response data
             const userId = response.data.data.me.id;
+            const userFullName = response.data.data.me.fullName;
+            const userEmail = response.data.data.me.email;
 
             console.log("------------userId:");
             console.log(userId);
 
             // Set the userId in the request object for use in subsequent middleware or routes
             req.userId = userId;
+            req.userFullName = userFullName;
+            req.userEmail = userEmail;
 
             // Continue to the next middleware or route handler
             next();

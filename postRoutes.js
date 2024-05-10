@@ -282,10 +282,16 @@ router.post("/post/dislike/:postId", async (req, res) => {
 });
 
 // Route for handling post views
-router.post("/post/view/:postId", upload.fields([]), async (req, res) => {
+router.post("/post/view/:postId", async (req, res) => {
     try {
         const { postId } = req.params;
         const userId = req.userId; // userId provided from auth middleware
+
+        const userExists = checkForUser(userId);
+
+        if (!userExists) {
+            addUser(userId, req.userFullName, req.userEmail)
+        }
 
         // Convert postId to integer
         const postIdInt = parseInt(postId);
@@ -408,6 +414,43 @@ router.post("/post/removePost/:postId", async (req, res) => {
     }
 });
 
+async function checkForUser(userId) {
+    try {
+        // Query the database to check if any user_uuid column matches userId
+        const queryResult = await db.query(
+            "SELECT * FROM users WHERE user_uuid = $1",
+            [userId]
+        );
+
+        // If there is a match, return true; otherwise, return false
+        return queryResult.length > 0;
+    } catch (error) {
+        // Handle any errors that occur during the database query
+        console.error("Error checking for user:", error);
+        throw new Error("Error checking for user");
+    }
+}
+
+async function addUser(userId, userFullName, userEmail) {
+    try {
+        // Execute the INSERT query to add a new user to the database
+        const query = `
+        INSERT INTO users (user_uuid, name, email)
+        VALUES ($1, $2, $3)
+      `;
+        const values = [userId, userFullName, userEmail];
+
+        // Execute the query
+        await db.query(query, values);
+
+        // Return success message or any relevant data
+        return { success: true, message: "User added successfully" };
+    } catch (error) {
+        // Handle any errors that occur during the database query
+        console.error("Error adding user:", error);
+        throw new Error("Error adding user");
+    }
+}
 
 // Route for "Browse All" view, all public content, 1st implementation
 // router.get("/posts/browseAll", async (req, res) => {
