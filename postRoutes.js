@@ -290,6 +290,7 @@ router.post("/post/view/:postId", async (req, res) => {
         const userExists = checkForUser(userId);
 
         if (!userExists) {
+            console.log('------------------- user doesnt exist, adding')
             addUser(userId, req.userFullName, req.userEmail)
         }
 
