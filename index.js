@@ -49,11 +49,14 @@ app.use(async (req, res, next) => {
                 }
             );
 
-            console.log("-----response:");
-            console.log(response);
+            console.log("-----response.data:");
+            console.log(response.data);
 
             // Extract the userId from the response data
             const userId = response.data.data.me.id;
+
+            console.log("------------userId:");
+            console.log(userId);
 
             // Set the userId in the request object for use in subsequent middleware or routes
             req.userId = userId;
