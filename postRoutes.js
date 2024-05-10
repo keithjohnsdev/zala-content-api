@@ -424,7 +424,7 @@ async function checkForUser(userId) {
         );
 
         // If there is a match, return true; otherwise, return false
-        return queryResult.length > 0;
+        return queryResult.rows.length > 0;
     } catch (error) {
         // Handle any errors that occur during the database query
         console.error("Error checking for user:", error);
