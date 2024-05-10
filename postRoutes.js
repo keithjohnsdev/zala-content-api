@@ -288,10 +288,12 @@ router.post("/post/view/:postId", async (req, res) => {
         const userId = req.userId; // userId provided from auth middleware
 
         const userExists = checkForUser(userId);
+        console.log("-----------userExists:");
+        console.log(userExists);
 
         if (!userExists) {
-            console.log('------------------- user doesnt exist, adding')
-            addUser(userId, req.userFullName, req.userEmail)
+            console.log("------------------- user doesnt exist, adding");
+            addUser(userId, req.userFullName, req.userEmail);
         }
 
         // Convert postId to integer
@@ -424,6 +426,8 @@ async function checkForUser(userId) {
         );
 
         // If there is a match, return true; otherwise, return false
+        console.log("------------queryResult.rows:")
+        console.log(queryResult.rows)
         return queryResult.rows.length > 0;
     } catch (error) {
         // Handle any errors that occur during the database query
