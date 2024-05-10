@@ -491,6 +491,7 @@ router.put(
         accessibility,
         tags,
         zala_library,
+        zala_public
       } = req.body;
       const videoFile = req.files["video"] ? req.files["video"][0] : false;
       const thumbnailFile = req.files["thumbnail"]
@@ -563,14 +564,15 @@ router.put(
       }
 
       zala_library = zala_library === "true";
+      zala_public = zala_public === "true";
 
       // Update content metadata in the database
       await db.query(
         `UPDATE content 
        SET title = $1, description = $2, description_markup = $3, s3_video_url = $4, s3_thumbnail = $5, 
-           tags = $6, zala_library = $7, accessibility = $8, 
+           tags = $6, zala_library = $7, accessibility = $8, zala_public = $9,
            updated_at = NOW()
-       WHERE content_id = $9`,
+       WHERE content_id = $10`,
         [
           title,
           description,
@@ -580,6 +582,7 @@ router.put(
           parsedTags,
           zala_library,
           parsedAccessibility,
+          zala_public,
           contentId, // Update the content with the specified contentId
         ]
       );
@@ -640,70 +643,6 @@ router.put(
           ]);
         } catch (error) {
           console.error("Error deleting row from zala_library table:", error);
-          throw error;
-        }
-      }
-
-      // Check if "public" exists in parsedAccessibility
-      const isPublic = parsedAccessibility.includes("public");
-
-      // If "public" exists, insert into zala_public
-      if (isPublic) {
-        try {
-          // Check if content already exists in zala_public table
-          const existingContent = await db.query(
-            "SELECT * FROM zala_public WHERE content_id = $1",
-            [contentId]
-          );
-
-          if (existingContent.rows.length === 0) {
-            // Insert new row into zala_public table
-            await db.query(
-              `INSERT INTO zala_public (
-                  title, 
-                  description, 
-                  s3_video_url, 
-                  s3_thumbnail, 
-                  created_at, 
-                  updated_at, 
-                  creator_user_uuid, 
-                  creator_name, 
-                  creator_profile_url, 
-                  tags, 
-                  org_id, 
-                  description_markup,
-                  content_id
-              )
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-              [
-                title,
-                description,
-                newVideoUrl,
-                newThumbnailUrl,
-                new Date(),
-                new Date(),
-                creator_user_uuid,
-                creator_name,
-                creator_profile_url,
-                parsedTags,
-                org_id,
-                description_markup,
-                contentId,
-              ]
-            );
-          }
-        } catch (error) {
-          console.error("Error inserting into zala_public table:", error);
-          throw error;
-        }
-      } else {
-        try {
-          // Delete the row from the zala_library table that matches the content_id
-          await db.query("DELETE FROM zala_public WHERE content_id = $1", [
-            contentId,
-          ]);
-        } catch (error) {
-          console.error("Error deleting row from zala_public table:", error);
           throw error;
         }
       }
