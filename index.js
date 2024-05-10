@@ -26,39 +26,34 @@ app.use(async (req, res, next) => {
         }
 
         try {
-            // Make a REST call to an external API to validate the token and retrieve the userId
-            const response = await fetch("https://zala-stg.herokuapp.com/gql", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: authHeader,
-                },
-                body: JSON.stringify({
+            // Make a POST request to the external API with the GraphQL query
+            const response = await axios.post(
+                "https://zala-stg.herokuapp.com/gql",
+                {
                     query: `
-                  query {
-                    todos {
-                      edges {
-                        node {
-                          completed
-                          id
-                          text
+                        query {
+                            me {
+                                id
+                            }
                         }
-                  }
-                    }
-                  }`,
-                }),
-            });
-            console.log("------------------------------------------- response:");
-            console.log(response.data)
+                    `,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            console.log("-----response:");
+            console.log(response);
 
             // Extract the userId from the response data
             const userId = response.data.data.me.id;
 
             // Set the userId in the request object for use in subsequent middleware or routes
             req.userId = userId;
-
-            console.log("-------------------------------------------");
-            console.log(userId);
 
             // Continue to the next middleware or route handler
             next();
