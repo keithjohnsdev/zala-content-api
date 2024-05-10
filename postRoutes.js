@@ -285,7 +285,7 @@ router.post("/post/dislike/:postId", async (req, res) => {
 router.post("/post/view/:postId", upload.fields([]), async (req, res) => {
     try {
         const { postId } = req.params;
-        const userId = req.headers.authorization; // Extract userId from the Authorization header
+        const userId = req.userId; // userId provided from auth middleware
 
         // Convert postId to integer
         const postIdInt = parseInt(postId);
