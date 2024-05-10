@@ -151,7 +151,14 @@ router.get("/posts/:creatorId", async (req, res) => {
 router.post("/post/like/:postId", async (req, res) => {
     try {
         const { postId } = req.params;
-        const userId = req.headers.authorization; // Extract userId from the Authorization header
+        const userId = req.userId; // userId provided from auth middleware
+
+        const userExists = await checkForUser(userId);
+
+        if (!userExists) {
+            console.log("------------------- user doesnt exist, adding user to db");
+            await addUser(userId, req.userFullName, req.userEmail);
+        }
 
         // Convert postId to integer
         const postIdInt = parseInt(postId);
@@ -217,7 +224,14 @@ router.post("/post/like/:postId", async (req, res) => {
 router.post("/post/dislike/:postId", async (req, res) => {
     try {
         const { postId } = req.params;
-        const userId = req.headers.authorization; // Extract userId from the Authorization header
+        const userId = req.userId; // userId provided from auth middleware
+
+        const userExists = await checkForUser(userId);
+
+        if (!userExists) {
+            console.log("------------------- user doesnt exist, adding user to db");
+            await addUser(userId, req.userFullName, req.userEmail);
+        }
 
         // Convert postId to integer
         const postIdInt = parseInt(postId);
@@ -288,11 +302,9 @@ router.post("/post/view/:postId", async (req, res) => {
         const userId = req.userId; // userId provided from auth middleware
 
         const userExists = await checkForUser(userId);
-        console.log("-----------userExists:");
-        console.log(userExists);
 
         if (!userExists) {
-            console.log("------------------- user doesnt exist, adding");
+            console.log("------------------- user doesnt exist, adding user to db");
             await addUser(userId, req.userFullName, req.userEmail);
         }
 
