@@ -12,8 +12,13 @@ app.use(cors());
 
 // Middleware function to extract user details from JWT
 app.use(async (req, res, next) => {
+
+    console.log("------- auth middleware run")
+    console.log(req.headers)
     // Get the Authorization header
     const authHeader = req.headers['authorization'];
+    console.log("---- authHeader:")
+    console.log(authHeader)
 
     // Check if the header exists and starts with 'Bearer '
     if (authHeader && authHeader.startsWith('Bearer ')) {
