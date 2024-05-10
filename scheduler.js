@@ -11,7 +11,6 @@ async function publishContent() {
     );
 
     const scheduledContent = queryResult.rows;
-    console.log(scheduledContent[0]);
 
     // Log the number of items ready to publish
     console.log(
@@ -35,7 +34,7 @@ async function publishContent() {
       ]);
 
       // Check if "public" exists in parsedAccessibility
-      const isPublic = content.accessibility.includes("public");
+      const isPublic = content.zala_public;
 
       // If "public" exists, insert into zala_public
       if (isPublic) {

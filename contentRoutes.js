@@ -788,9 +788,10 @@ router.post(
                   tags,
                   org_id,
                   zala_library,
-                  description_markup
+                  description_markup,
+                  zala_public
               )
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
               RETURNING post_id`,
             [
               queryResult.rows[0].content_id,
@@ -808,6 +809,7 @@ router.post(
               queryResult.rows[0].org_id,
               queryResult.rows[0].zala_library,
               queryResult.rows[0].description_markup,
+              queryResult.rows[0].zala_public,
             ]
           );
 
