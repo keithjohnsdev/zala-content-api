@@ -21,7 +21,7 @@ router.post("/posts/forYou", upload.none(), async (req, res) => {
         const { creatorIds } = req.body;
 
         // Step 1: Extract User UUID
-        const userId = req.headers.authorization;
+        const userId = req.userId;
 
         // Parse JSON string to array if needed
         const parsedIds =
@@ -86,7 +86,7 @@ router.post("/posts/forYou", upload.none(), async (req, res) => {
 router.get("/posts/browseAll", async (req, res) => {
     try {
         // Step 1: Extract User UUID
-        const userId = req.headers.authorization;
+        const userId = req.userId;
 
         // Step 2: Retrieve Data from Database
         const publicPostsQuery = await db.query("SELECT * FROM zala_public");
