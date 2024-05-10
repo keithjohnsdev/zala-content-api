@@ -83,22 +83,23 @@ router.post(
         scheduled_time,
         org_id,
         zala_library,
+        zala_public
       } = req.body;
       const videoFile = req.files["video"][0];
       const thumbnailFile = req.files["thumbnail"][0];
-      console.log(req.body);
 
       // Parse the JSON arrays
       const parsedTags = JSON.parse(tags);
       const parsedAccessibility = JSON.parse(accessibility); // Parse accessibility as JSON
+      console.log(parsedAccessibility)
 
-      // Handle empty undefined scheduled variable
+      // Handle empty undefined boolean variables
       const scheduledValue = scheduled === "true";
+      const zalaPublic = zala_public === "true";
+      console.log(zalaPublic)
 
       // Handle undefined or empty string values for scheduled_time
       const scheduledTime = scheduledValue ? scheduled_time : null;
-      console.log(`type of scheduledTime: ${typeof scheduledTime}`);
-      console.log(`scheduledTime: ${scheduledTime}`);
 
       // Get filenames for video and thumbnail
       const videoFilename = videoFile.originalname;
@@ -124,7 +125,7 @@ router.post(
 
       // Save content metadata to the database
       const result = await db.query(
-        "INSERT INTO content (title, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, scheduled, accessibility, tags, scheduled_time, org_id, zala_library, description_markup) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING content_id",
+        "INSERT INTO content (title, description, s3_video_url, s3_thumbnail, creator_name, creator_profile_url, creator_user_uuid, scheduled, accessibility, tags, scheduled_time, org_id, zala_library, description_markup, zala_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING content_id",
         [
           title,
           description,
@@ -140,6 +141,7 @@ router.post(
           org_id,
           zala_library,
           description_markup,
+          zalaPublic
         ]
       );
 
@@ -169,9 +171,10 @@ router.post(
                 tags,
                 org_id,
                 zala_library,
-                description_markup
+                description_markup,
+                zala_public
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
             RETURNING post_id`,
             [
               contentId,
@@ -189,6 +192,7 @@ router.post(
               org_id,
               zala_library,
               description_markup,
+              zalaPublic
             ]
           );
 
@@ -252,7 +256,7 @@ router.post(
       }
 
       // Check if "public" exists in parsedAccessibility
-      const isPublic = parsedAccessibility.includes("public");
+      const isPublic = zalaPublic;
 
       // If "public" exists, insert into zala_public
       // if (isPublic) {
