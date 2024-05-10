@@ -287,13 +287,13 @@ router.post("/post/view/:postId", async (req, res) => {
         const { postId } = req.params;
         const userId = req.userId; // userId provided from auth middleware
 
-        const userExists = checkForUser(userId);
+        const userExists = await checkForUser(userId);
         console.log("-----------userExists:");
         console.log(userExists);
 
         if (!userExists) {
             console.log("------------------- user doesnt exist, adding");
-            addUser(userId, req.userFullName, req.userEmail);
+            await addUser(userId, req.userFullName, req.userEmail);
         }
 
         // Convert postId to integer
