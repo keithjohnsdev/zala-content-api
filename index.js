@@ -42,7 +42,7 @@ app.use(async (req, res, next) => {
                 },
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`,
+                        Authorization: `${token}`,
                         "Content-Type": "application/json",
                     },
                 }
