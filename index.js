@@ -20,11 +20,12 @@ app.use(async (req, res, next) => {
 
     // Check if the header exists and starts with 'Bearer '
     if (authHeader) {
+        let token;
         if (authHeader.startsWith("Bearer ")) {
             // Extract the token (remove 'Bearer ' from the beginning)
-            const token = authHeader.substring(7);
+            token = authHeader.substring(7);
         } else {
-            const token = authHeader;
+            token = authHeader;
         }
 
         try {
@@ -42,7 +43,7 @@ app.use(async (req, res, next) => {
                 },
                 {
                     headers: {
-                        Authorization: `${token}`,
+                        Authorization: token,
                         "Content-Type": "application/json",
                     },
                 }
