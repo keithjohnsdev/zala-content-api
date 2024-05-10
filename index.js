@@ -23,6 +23,8 @@ app.use(async (req, res, next) => {
         if (authHeader.startsWith("Bearer ")) {
             // Extract the token (remove 'Bearer ' from the beginning)
             const token = authHeader.substring(7);
+        } else {
+            const token = authHeader;
         }
 
         try {
