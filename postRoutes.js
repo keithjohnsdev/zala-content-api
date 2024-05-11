@@ -16,7 +16,7 @@ const s3 = new S3({
 });
 
 // Route for "for you" view (Zala public from all superusers and content from subscribed superusers)
-router.post("/posts/forYou", async (req, res) => {
+router.post("/posts/forYou", upload.none(), async (req, res) => {
     try {
         const { creatorIds } = req.body;
 
