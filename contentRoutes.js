@@ -884,31 +884,46 @@ router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
 });
 
 // Route for searching content from creator
-router.post(
-    "/content/search/:creatorId",
-    upload.fields([]),
-    async (req, res) => {
-        try {
-            const { creatorId } = req.params;
-            const { searchValue } = req.body;
-
-            console.log(req.body);
-
-            // Fetch content from the database for the given creatorId and filter by searchValue
-            const queryResult = await db.query(
-                `SELECT * FROM content WHERE creator_user_uuid = $1 AND (column1 ILIKE $2 OR column2 ILIKE $2 OR column3 ILIKE $2) ORDER BY content_id DESC`,
-                [creatorId, `%${searchValue}%`] // Using ILIKE for case-insensitive search
-            );
-
-            // Extract the rows from the query result
-            const contentList = queryResult.rows;
-
-            res.status(200).json(contentList);
-        } catch (error) {
-            console.error("Error fetching content:", error);
-            res.status(500).json({ error: "Internal server error" });
-        }
+router.post("/content/search/:creatorId", async (req, res) => {
+    try {
+      const { creatorId } = req.params;
+      const { searchValue } = req.body;
+  
+      // Constructing the SQL query
+      let query = `
+        SELECT * 
+        FROM content 
+        WHERE creator_user_uuid = $1 
+        AND (
+          content_id::text ILIKE $2 
+          OR title ILIKE $2 
+          OR description ILIKE $2 
+          OR creator_name ILIKE $2 
+          OR accessibility @> ARRAY[$3] 
+          OR tags @> ARRAY[$3] 
+          OR posts @> ARRAY[$3] 
+          OR (zala_public AND $4)
+        ) 
+        ORDER BY content_id DESC
+      `;
+  
+      // Fetch content from the database for the given creatorId and filter by searchValue
+      const queryResult = await db.query(query, [
+        creatorId, 
+        `%${searchValue}%`, 
+        searchValue, // For searching within arrays
+        searchValue.toLowerCase().includes("public") || searchValue.toLowerCase().includes("zala") // For zala_public
+      ]);
+  
+      // Extract the rows from the query result
+      const contentList = queryResult.rows;
+  
+      res.status(200).json(contentList);
+    } catch (error) {
+      console.error("Error fetching content:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
-);
+  });
+  
 
 module.exports = router;
