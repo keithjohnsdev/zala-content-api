@@ -892,34 +892,30 @@ router.post(
             const { creatorId } = req.params;
             const { searchValue } = req.body;
 
-            console.log(req.body);
-            console.log("searchValue: " + searchValue);
-
             // Constructing the SQL query
             let query = `
-        SELECT * 
-        FROM content 
-        WHERE creator_user_uuid = $1 
-        AND (
-          content_id::text ILIKE $2 
-          OR title ILIKE $2 
-          OR description ILIKE $2 
-          OR creator_name ILIKE $2 
-          OR accessibility @> ARRAY[$3] 
-          OR tags @> ARRAY[$3] 
-          OR posts @> ARRAY[$3] 
-          OR (zala_public AND $4)
-        ) 
-        ORDER BY content_id DESC
-      `;
+              SELECT * 
+              FROM content 
+              WHERE creator_user_uuid = $1 
+              AND (
+                content_id::text ILIKE $2 
+                OR title ILIKE $2 
+                OR description ILIKE $2 
+                OR creator_name ILIKE $2 
+                OR $3 = ANY(accessibility)
+                OR $3 = ANY(tags)
+                OR $3 = ANY(posts)
+                OR (zala_public AND ($4 ILIKE '%public%' OR $4 ILIKE '%zala%'))
+              ) 
+              ORDER BY content_id DESC
+            `;
 
             // Fetch content from the database for the given creatorId and filter by searchValue
             const queryResult = await db.query(query, [
                 creatorId,
                 `%${searchValue}%`,
                 searchValue, // For searching within arrays
-                searchValue.toLowerCase().includes("public") ||
-                    searchValue.toLowerCase().includes("zala"), // For zala_public
+                searchValue.toLowerCase(), // For zala_public
             ]);
 
             // Extract the rows from the query result
