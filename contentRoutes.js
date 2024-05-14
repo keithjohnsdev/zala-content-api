@@ -848,4 +848,29 @@ router.post("/content/removeFromSchedule/:contentId", async (req, res) => {
   }
 });
 
+// Route for searching content from creator
+router.post("/content/search/:creatorId", async (req, res) => {
+    try {
+      const { creatorId } = req.params;
+      const { searchValue } = req.body;
+
+      console.log(req.body);
+  
+      // Fetch content from the database for the given creatorId and filter by searchValue
+      const queryResult = await db.query(
+        `SELECT * FROM content WHERE creator_user_uuid = $1 AND (column1 ILIKE $2 OR column2 ILIKE $2 OR column3 ILIKE $2) ORDER BY content_id DESC`,
+        [creatorId, `%${searchValue}%`] // Using ILIKE for case-insensitive search
+      );
+  
+      // Extract the rows from the query result
+      const contentList = queryResult.rows;
+  
+      res.status(200).json(contentList);
+    } catch (error) {
+      console.error("Error fetching content:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  
+
 module.exports = router;
