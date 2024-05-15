@@ -94,12 +94,10 @@ router.post(
             // Parse the JSON arrays
             const parsedTags = JSON.parse(tags);
             const parsedAccessibility = JSON.parse(accessibility); // Parse accessibility as JSON
-            console.log(parsedAccessibility);
 
             // Handle empty undefined boolean variables
             const scheduledValue = scheduled === "true";
             const zalaPublic = zala_public === "true";
-            console.log(zalaPublic);
 
             // Handle undefined or empty string values for scheduled_time
             const scheduledTime = scheduledValue ? scheduled_time : null;
@@ -905,11 +903,10 @@ router.post(
                 OR $3 = ANY(accessibility)
                 OR $3 = ANY(tags)
                 OR $5 = ANY(posts)
-                OR (zala_public AND ($4 ILIKE '%public%' OR $4 ILIKE '%zala%'))
               ) 
               ORDER BY content_id DESC
             `;
-
+//                OR (zala_public AND ($4 ILIKE '%public%' OR $4 ILIKE '%zala%'))
             // Fetch content from the database for the given creatorId and filter by searchValue
             const queryResult = await db.query(query, [
                 creatorId,
