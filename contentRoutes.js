@@ -897,11 +897,11 @@ router.post(
             WHERE creator_user_uuid = $1 
             AND (
                 content_id = $2::integer
-                OR title ILIKE $2 
-                OR description ILIKE $2 
-                OR creator_name ILIKE $2 
-                OR $2 = ANY(accessibility)
-                OR $2 = ANY(tags)
+                OR title ILIKE $3 
+                OR description ILIKE $3 
+                OR creator_name ILIKE $3 
+                OR $3 = ANY(accessibility)
+                OR $3 = ANY(tags)
                 OR $2::integer = ANY(posts) -- Explicitly cast searchValue to integer
             ) 
             ORDER BY content_id DESC
@@ -910,8 +910,8 @@ router.post(
             // Fetch content from the database for the given creatorId and filter by searchValue
             const queryResult = await db.query(query, [
                 creatorId,
-                `%${searchValue}%`,
-                searchValue, // For searching within arrays
+                searchValue, // For content_id and posts
+                `%${searchValue}%`, // For string matching
             ]);
 
             // Extract the rows from the query result
