@@ -896,13 +896,9 @@ router.post(
             FROM content 
             WHERE creator_user_uuid = $1 
             AND (
-                (content_id = $2::integer OR $2 ~ '^\d+$') -- Perform integer comparison if searchValue is integer
-                OR title ILIKE $3 
-                OR description ILIKE $3 
-                OR creator_name ILIKE $3 
-                OR $3 = ANY(accessibility)
-                OR $3 = ANY(tags)
-                OR $2 = ANY(posts) -- Perform string comparison for posts
+                title ILIKE $2 
+                OR description ILIKE $2 
+                OR creator_name ILIKE $2 
             ) 
             ORDER BY content_id DESC
             `;
@@ -910,7 +906,6 @@ router.post(
             // Fetch content from the database for the given creatorId and filter by searchValue
             const queryResult = await db.query(query, [
                 creatorId,
-                searchValue, // For integer comparison and posts
                 `%${searchValue}%`, // For string matching
             ]);
 
@@ -924,5 +919,6 @@ router.post(
         }
     }
 );
+
 
 module.exports = router;
