@@ -892,28 +892,28 @@ router.post(
 
             // Constructing the SQL query
             let query = `
-              SELECT * 
-              FROM content 
-              WHERE creator_user_uuid = $1 
-              AND (
-                content_id ILIKE $5 
+            SELECT * 
+            FROM content 
+            WHERE creator_user_uuid = $1 
+            AND (
+                content_id = $5::integer  -- Explicitly cast searchValue to integer
                 OR title ILIKE $2 
                 OR description ILIKE $2 
                 OR creator_name ILIKE $2 
                 OR $3 = ANY(accessibility)
                 OR $3 = ANY(tags)
                 OR $5 = ANY(posts)
-              ) 
-              ORDER BY content_id DESC
+            ) 
+            ORDER BY content_id DESC
             `;
-//                OR (zala_public AND ($4 ILIKE '%public%' OR $4 ILIKE '%zala%'))
+            //                OR (zala_public AND ($4 ILIKE '%public%' OR $4 ILIKE '%zala%'))
             // Fetch content from the database for the given creatorId and filter by searchValue
             const queryResult = await db.query(query, [
                 creatorId,
                 `%${searchValue}%`,
                 searchValue, // For searching within arrays
                 searchValue.toLowerCase(), // For zala_public
-                Number(searchValue)
+                Number(searchValue),
             ]);
 
             // Extract the rows from the query result
