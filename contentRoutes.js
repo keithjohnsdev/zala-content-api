@@ -898,13 +898,13 @@ router.post(
               FROM content 
               WHERE creator_user_uuid = $1 
               AND (
-                content_id::text ILIKE $2 
+                content_id ILIKE $5 
                 OR title ILIKE $2 
                 OR description ILIKE $2 
                 OR creator_name ILIKE $2 
                 OR $3 = ANY(accessibility)
                 OR $3 = ANY(tags)
-                OR $3 = ANY(posts)
+                OR $5 = ANY(posts)
                 OR (zala_public AND ($4 ILIKE '%public%' OR $4 ILIKE '%zala%'))
               ) 
               ORDER BY content_id DESC
@@ -916,6 +916,7 @@ router.post(
                 `%${searchValue}%`,
                 searchValue, // For searching within arrays
                 searchValue.toLowerCase(), // For zala_public
+                Number(searchValue)
             ]);
 
             // Extract the rows from the query result
