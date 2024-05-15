@@ -890,6 +890,8 @@ router.post(
             const { creatorId } = req.params;
             const { searchValue } = req.body;
 
+            console.log(searchValue)
+
             // Constructing the SQL query
             let query = `
             SELECT * 
