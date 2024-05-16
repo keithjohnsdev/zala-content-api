@@ -473,16 +473,16 @@ router.get("/content/id/:contentId", async (req, res) => {
         const contentData = queryResult.rows[0];
 
         // Transform the accessibility array into an object
-        const accessibilityObject = contentData.accessibility.reduce(
-            (acc, accessibilityLevel) => {
-                acc[accessibilityLevel] = true;
-                return acc;
-            },
-            {}
-        );
+        // const accessibilityObject = contentData.accessibility.reduce(
+        //     (acc, accessibilityLevel) => {
+        //         acc[accessibilityLevel] = true;
+        //         return acc;
+        //     },
+        //     {}
+        // );
 
         // Replace the accessibility array with the transformed object
-        contentData.accessibility = accessibilityObject;
+        // contentData.accessibility = accessibilityObject;
 
         res.status(200).json(contentData);
     } catch (error) {
