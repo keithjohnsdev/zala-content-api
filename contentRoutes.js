@@ -472,6 +472,7 @@ router.get("/content/id/:contentId", async (req, res) => {
         // Extract the content data from the query result
         const contentData = queryResult.rows[0];
 
+
         // Transform the accessibility array into an object
         // const accessibilityObject = contentData.accessibility.reduce(
         //     (acc, accessibilityLevel) => {
@@ -908,7 +909,7 @@ router.post(
             // Fetch content from the database for the given creatorId and filter by searchValue
             const queryResult = await db.query(query, [
                 creatorId,
-                `%${searchValue}%`, // For string matching
+                `${searchValue}`, // For string matching
             ]);
 
             // Extract the rows from the query result
