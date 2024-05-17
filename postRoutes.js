@@ -19,6 +19,7 @@ const s3 = new S3({
 router.post("/posts/forYou", upload.none(), async (req, res) => {
     try {
         const { creatorIds } = req.body;
+        console.log(creatorIds);
 
         // Step 1: Extract User UUID
         const userId = req.userId;
