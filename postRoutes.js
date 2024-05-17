@@ -115,7 +115,7 @@ router.get("/posts/browseAll", async (req, res) => {
 
         // Step 5: Return Updated Array
         const sortedPublicPosts = publicPosts.sort(
-            (a, b) => b.post_time - a.post_time
+            (a, b) => b.created_at - a.created_at
         );
         res.status(200).json(sortedPublicPosts);
     } catch (error) {
