@@ -891,7 +891,7 @@ router.post(
             const { creatorId } = req.params;
             const { searchValue } = req.body;
 
-            console.log(searchValue)
+            console.log(searchValue);
 
             // Constructing the SQL query
             let query = `
@@ -906,10 +906,13 @@ router.post(
             ORDER BY content_id DESC
             `;
 
+            // Adding % wildcards to the search value for pattern matching
+            const searchPattern = `%${searchValue}%`;
+
             // Fetch content from the database for the given creatorId and filter by searchValue
             const queryResult = await db.query(query, [
                 creatorId,
-                `${searchValue}`, // For string matching
+                searchPattern // For string matching
             ]);
 
             // Extract the rows from the query result
@@ -922,6 +925,7 @@ router.post(
         }
     }
 );
+
 
 
 module.exports = router;
