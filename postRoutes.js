@@ -469,6 +469,48 @@ async function addUser(userId, userFullName, userEmail) {
     }
 }
 
+// Route for searching posts from creator
+router.post(
+    "/posts/search/:creatorId",
+    upload.fields([]),
+    async (req, res) => {
+        try {
+            const { creatorId } = req.params;
+            const { searchValue } = req.body;
+
+            // Constructing the SQL query
+            let query = `
+            SELECT * 
+            FROM posts 
+            WHERE creator_user_uuid = $1 
+            AND (
+                title ILIKE $2 
+                OR description ILIKE $2 
+                OR creator_name ILIKE $2 
+            ) 
+            ORDER BY content_id DESC
+            `;
+
+            // Adding % wildcards to the search value for pattern matching
+            const searchPattern = `%${searchValue}%`;
+
+            // Fetch content from the database for the given creatorId and filter by searchValue
+            const queryResult = await db.query(query, [
+                creatorId,
+                searchPattern // For string matching
+            ]);
+
+            // Extract the rows from the query result
+            const postsList = queryResult.rows;
+
+            res.status(200).json(postsList);
+        } catch (error) {
+            console.error("Error searching posts:", error);
+            res.status(500).json({ error: "Internal server error" });
+        }
+    }
+);
+
 // Route for "Browse All" view, all public content, 1st implementation
 // router.get("/posts/browseAll", async (req, res) => {
 //     try {
