@@ -473,18 +473,38 @@ router.get("/content/id/:contentId", async (req, res) => {
         // Extract the content data from the query result
         const contentData = queryResult.rows[0];
 
+        res.status(200).json(contentData);
+    } catch (error) {
+        console.error("Error fetching content:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
 
-        // Transform the accessibility array into an object
-        // const accessibilityObject = contentData.accessibility.reduce(
-        //     (acc, accessibilityLevel) => {
-        //         acc[accessibilityLevel] = true;
-        //         return acc;
-        //     },
-        //     {}
-        // );
+// Route for fetching a multiple content items by content IDs
+router.post("/content/ids", async (req, res) => {
+    try {
+        const { contentIds } = req.body; // Extract the contentIds from the request body
 
-        // Replace the accessibility array with the transformed object
-        // contentData.accessibility = accessibilityObject;
+        if (!contentIds || !Array.isArray(contentIds)) {
+            return res.status(400).json({ error: "contentIds array is required in the request body" });
+        }
+
+        // Convert the contentIds into an array of integers
+        const idsArray = contentIds.map(id => parseInt(id, 10));
+
+        // Check if any of the ids are NaN
+        if (idsArray.some(isNaN)) {
+            return res.status(400).json({ error: "All contentIds must be valid integers" });
+        }
+
+        // Fetch the content from the database for the given array of contentIds
+        const queryResult = await db.query(
+            `SELECT * FROM content WHERE content_id = ANY($1::int[])`,
+            [idsArray]
+        );
+
+        // Extract the content data from the query result
+        const contentData = queryResult.rows;
 
         res.status(200).json(contentData);
     } catch (error) {
@@ -492,6 +512,7 @@ router.get("/content/id/:contentId", async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 });
+
 
 // Route for editing existing content
 router.put(
