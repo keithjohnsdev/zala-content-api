@@ -3,6 +3,7 @@ const contentRoutes = require("./contentRoutes");
 const postRoutes = require("./postRoutes");
 const cors = require("cors");
 const axios = require("axios");
+const db = require("./db");
 
 // Create a new Express application
 const app = express();
@@ -26,8 +27,6 @@ app.use(async (req, res, next) => {
     console.log("------- auth middleware run");
     // Get the Authorization header
     const authHeader = req.headers["authorization"];
-    console.log("---- authHeader:");
-    console.log(authHeader);
 
     // Check if the header exists and starts with 'Bearer '
     if (authHeader) {
@@ -89,6 +88,38 @@ app.use(async (req, res, next) => {
         // If the Authorization header is missing or doesn't start with 'Bearer ',
         // return a 401 Unauthorized response
         return res.status(401).json({ error: "Unauthorized" });
+    }
+});
+
+// Middleware to check if user exists in the database and add if not
+app.use(async (req, res, next) => {
+    try {
+        const { userId, userFullName, userEmail } = req;
+
+        // Query to check if the user exists
+        const userCheckQuery = `
+            SELECT * FROM users WHERE user_uuid = $1 OR name = $2 OR email = $3;
+        `;
+        const userCheckParams = [userId, userFullName, userEmail];
+        const userCheckResult = await db.query(userCheckQuery, userCheckParams);
+
+        if (userCheckResult.rowCount === 0) {
+            // If user does not exist, insert the new user
+            const insertUserQuery = `
+            INSERT INTO users (user_uuid, name, email, created_at, updated_at)
+            VALUES ($1, $2, $3, NOW(), NOW());
+        `;
+            const insertUserParams = [userId, userFullName, userEmail];
+            await db.query(insertUserQuery, insertUserParams);
+            console.log('New user added to the database');
+        } else {
+            console.log('User already exists in the database');
+        }
+
+        next(); // Continue to the next middleware or route handler
+    } catch (error) {
+        console.error("Error checking or adding user:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
 });
 
