@@ -89,8 +89,9 @@ router.post(
                 zala_library,
                 zala_public,
             } = req.body;
-            const videoFile = req.files["video"][0];
-            const thumbnailFile = req.files["thumbnail"][0];
+
+            const videoFile = req.files && req.files["video"] ? req.files["video"][0] : null;
+            const thumbnailFile = req.files && req.files["thumbnail"] ? req.files["thumbnail"][0] : null;
 
             // Parse the JSON arrays
             const parsedTags = JSON.parse(tags);
@@ -103,29 +104,31 @@ router.post(
             // Handle undefined or empty string values for scheduled_time
             const scheduledTime = scheduledValue ? scheduled_time : null;
 
-            // Get filenames for video and thumbnail
-            const videoFilename = videoFile.originalname;
-            const thumbnailFilename = thumbnailFile.originalname;
+            let videoUploadResult, thumbnailUploadResult;
 
-            // Upload video file to S3
-            const videoParams = {
-                Bucket: process.env.S3_BUCKET_NAME,
-                Key: `videos/${creator_user_uuid}/${uuidv4()}-${videoFilename}`,
-                Body: videoFile.buffer,
-                ContentType: videoFile.mimetype,
-            };
-            const videoUploadResult = await s3.upload(videoParams).promise();
+            // Check if video is provided and upload to S3 if so
+            if (videoFile) {
+                const videoFilename = videoFile.originalname;
+                const videoParams = {
+                    Bucket: process.env.S3_BUCKET_NAME,
+                    Key: `videos/${creator_user_uuid}/${uuidv4()}-${videoFilename}`,
+                    Body: videoFile.buffer,
+                    ContentType: videoFile.mimetype,
+                };
+                videoUploadResult = await s3.upload(videoParams).promise();
+            }
 
-            // Upload thumbnail file to S3
-            const thumbnailParams = {
-                Bucket: process.env.S3_BUCKET_NAME,
-                Key: `thumbnails/${creator_user_uuid}/${uuidv4()}-${thumbnailFilename}`,
-                Body: thumbnailFile.buffer,
-                ContentType: thumbnailFile.mimetype,
-            };
-            const thumbnailUploadResult = await s3
-                .upload(thumbnailParams)
-                .promise();
+            // Check if thumbnail is provided and upload to S3 if so
+            if (thumbnailFile) {
+                const thumbnailFilename = thumbnailFile.originalname;
+                const thumbnailParams = {
+                    Bucket: process.env.S3_BUCKET_NAME,
+                    Key: `thumbnails/${creator_user_uuid}/${uuidv4()}-${thumbnailFilename}`,
+                    Body: thumbnailFile.buffer,
+                    ContentType: thumbnailFile.mimetype,
+                };
+                thumbnailUploadResult = await s3.upload(thumbnailParams).promise();
+            }
 
             // Save content metadata to the database
             const result = await db.query(
@@ -133,8 +136,8 @@ router.post(
                 [
                     title,
                     description,
-                    videoUploadResult.Location,
-                    thumbnailUploadResult.Location,
+                    videoUploadResult ? videoUploadResult.Location : null, // Video URL if available
+                    thumbnailUploadResult ? thumbnailUploadResult.Location : null, // Thumbnail URL if available
                     creator_name,
                     creator_profile_url,
                     creator_user_uuid,
@@ -188,8 +191,8 @@ router.post(
                             parsedAccessibility,
                             title,
                             description,
-                            videoUploadResult.Location,
-                            thumbnailUploadResult.Location,
+                            videoUploadResult ? videoUploadResult.Location : null, // Video URL if available
+                            thumbnailUploadResult ? thumbnailUploadResult.Location : null, // Thumbnail URL if available
                             creator_name,
                             creator_profile_url,
                             parsedTags,
@@ -241,8 +244,8 @@ router.post(
                             contentId,
                             title,
                             description,
-                            videoUploadResult.Location,
-                            thumbnailUploadResult.Location,
+                            videoUploadResult ? videoUploadResult.Location : null, // Video URL if available
+                            thumbnailUploadResult ? thumbnailUploadResult.Location : null, // Thumbnail URL if available
                             new Date(),
                             new Date(),
                             creator_user_uuid,
@@ -269,6 +272,7 @@ router.post(
         }
     }
 );
+
 
 // Route for listing content by creator ID
 router.get("/content/:creatorId", async (req, res) => {
