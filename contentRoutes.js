@@ -88,8 +88,9 @@ router.post(
                 zala_library,
                 zala_public,
             } = req.body;
-            const videoFile = req.files["video"][0];
-            const thumbnailFile = req.files["thumbnail"][0];
+
+            const videoFile = req.files && req.files["video"] ? req.files["video"][0] : null;
+            const thumbnailFile = req.files && req.files["thumbnail"] ? req.files["thumbnail"][0] : null;
 
             // Parse the JSON arrays
             const parsedTags = JSON.parse(tags);
@@ -102,29 +103,31 @@ router.post(
             // Handle undefined or empty string values for scheduled_time
             const scheduledTime = scheduledValue ? scheduled_time : null;
 
-            // Get filenames for video and thumbnail
-            const videoFilename = videoFile.originalname;
-            const thumbnailFilename = thumbnailFile.originalname;
+            let videoUploadResult, thumbnailUploadResult;
 
-            // Upload video file to S3
-            const videoParams = {
-                Bucket: process.env.S3_BUCKET_NAME,
-                Key: `videos/${creator_user_uuid}/${uuidv4()}-${videoFilename}`,
-                Body: videoFile.buffer,
-                ContentType: videoFile.mimetype,
-            };
-            const videoUploadResult = await s3.upload(videoParams).promise();
+            // Check if video is provided and upload to S3 if so
+            if (videoFile) {
+                const videoFilename = videoFile.originalname;
+                const videoParams = {
+                    Bucket: process.env.S3_BUCKET_NAME,
+                    Key: `videos/${creator_user_uuid}/${uuidv4()}-${videoFilename}`,
+                    Body: videoFile.buffer,
+                    ContentType: videoFile.mimetype,
+                };
+                videoUploadResult = await s3.upload(videoParams).promise();
+            }
 
-            // Upload thumbnail file to S3
-            const thumbnailParams = {
-                Bucket: process.env.S3_BUCKET_NAME,
-                Key: `thumbnails/${creator_user_uuid}/${uuidv4()}-${thumbnailFilename}`,
-                Body: thumbnailFile.buffer,
-                ContentType: thumbnailFile.mimetype,
-            };
-            const thumbnailUploadResult = await s3
-                .upload(thumbnailParams)
-                .promise();
+            // Check if thumbnail is provided and upload to S3 if so
+            if (thumbnailFile) {
+                const thumbnailFilename = thumbnailFile.originalname;
+                const thumbnailParams = {
+                    Bucket: process.env.S3_BUCKET_NAME,
+                    Key: `thumbnails/${creator_user_uuid}/${uuidv4()}-${thumbnailFilename}`,
+                    Body: thumbnailFile.buffer,
+                    ContentType: thumbnailFile.mimetype,
+                };
+                thumbnailUploadResult = await s3.upload(thumbnailParams).promise();
+            }
 
             // Save content metadata to the database
             const result = await db.query(
@@ -132,8 +135,8 @@ router.post(
                 [
                     title,
                     description,
-                    videoUploadResult.Location,
-                    thumbnailUploadResult.Location,
+                    videoUploadResult ? videoUploadResult.Location : null, // Video URL if available
+                    thumbnailUploadResult ? thumbnailUploadResult.Location : null, // Thumbnail URL if available
                     creator_name,
                     creator_profile_url,
                     creator_user_uuid,
@@ -187,8 +190,8 @@ router.post(
                             parsedAccessibility,
                             title,
                             description,
-                            videoUploadResult.Location,
-                            thumbnailUploadResult.Location,
+                            videoUploadResult ? videoUploadResult.Location : null, // Video URL if available
+                            thumbnailUploadResult ? thumbnailUploadResult.Location : null, // Thumbnail URL if available
                             creator_name,
                             creator_profile_url,
                             parsedTags,
@@ -240,8 +243,8 @@ router.post(
                             contentId,
                             title,
                             description,
-                            videoUploadResult.Location,
-                            thumbnailUploadResult.Location,
+                            videoUploadResult ? videoUploadResult.Location : null, // Video URL if available
+                            thumbnailUploadResult ? thumbnailUploadResult.Location : null, // Thumbnail URL if available
                             new Date(),
                             new Date(),
                             creator_user_uuid,
@@ -261,60 +264,6 @@ router.post(
                 }
             }
 
-            // Check if "public" exists in parsedAccessibility
-            const isPublic = zalaPublic;
-
-            // If "public" exists, insert into zala_public
-            // if (isPublic) {
-            //   try {
-            //     // Check if content already exists in zala_public table
-            //     const existingContent = await db.query(
-            //       "SELECT * FROM zala_public WHERE title = $1 AND description = $2",
-            //       [title, description]
-            //     );
-
-            //     if (existingContent.rows.length === 0) {
-            //       // Insert new row into zala_public table
-            //       await db.query(
-            //         `INSERT INTO zala_public (
-            //             title,
-            //             description,
-            //             s3_video_url,
-            //             s3_thumbnail,
-            //             created_at,
-            //             updated_at,
-            //             creator_user_uuid,
-            //             creator_name,
-            //             creator_profile_url,
-            //             tags,
-            //             org_id,
-            //             description_markup,
-            //             content_id
-            //         )
-            //         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-            //         [
-            //           title,
-            //           description,
-            //           videoUploadResult.Location,
-            //           thumbnailUploadResult.Location,
-            //           new Date(),
-            //           new Date(),
-            //           creator_user_uuid,
-            //           creator_name,
-            //           creator_profile_url,
-            //           parsedTags,
-            //           org_id,
-            //           description_markup,
-            //           contentId,
-            //         ]
-            //       );
-            //     }
-            //   } catch (error) {
-            //     console.error("Error inserting into zala_public table:", error);
-            //     throw error;
-            //   }
-            // }
-
             res.status(201).json({ message: "Content created successfully" });
         } catch (error) {
             console.error("Error creating content:", error);
@@ -322,6 +271,7 @@ router.post(
         }
     }
 );
+
 
 // Route for listing content by creator ID
 router.get("/content/:creatorId", async (req, res) => {
