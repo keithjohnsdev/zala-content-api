@@ -419,7 +419,7 @@ router.post("/post/removePost/:postId", async (req, res) => {
 
         // Update the content to remove the deleted post ID from the posts array
         await db.query(
-            "UPDATE content SET posts = array_remove(posts, $1), WHERE content_id = $2",
+            "UPDATE content SET posts = array_remove(posts, $1) WHERE content_id = $2",
             [deletedPostId, contentId]
         );
 
