@@ -340,11 +340,6 @@ router.delete("/content/delete/:contentId", async (req, res) => {
     // Extract S3 URLs from the query result
     const { s3_video_url, s3_thumbnail } = queryResult.rows[0];
 
-    console.log("**************logging s3 keys*********");
-    console.log(s3_thumbnail);
-    console.log(Boolean(s3_video_url));
-    console.log(typeof s3_thumbnail);
-
     // Extract S3 keys from URLs
     const videoKey = s3_video_url && extractS3Key(s3_video_url);
     const thumbnailKey = s3_thumbnail && extractS3Key(s3_thumbnail);
@@ -364,7 +359,7 @@ router.delete("/content/delete/:contentId", async (req, res) => {
     // await db.query("DELETE FROM zala_public WHERE content_id = $1", [contentId]);
 
     // Delete video and thumbnail files from S3
-    const deletePromises = Promise.all([
+    const deletePromises = s3_thumbnail && s3_video_url && Promise.all([
       s3
         .deleteObject({
           Bucket: process.env.S3_BUCKET_NAME,
@@ -379,10 +374,8 @@ router.delete("/content/delete/:contentId", async (req, res) => {
         .promise(),
     ]);
 
-    if (s3_thumbnail && s3_video_url) {
-      const deleteResults = await deletePromises;
-      console.log(deleteResults);
-    }
+    const deleteResults = await deletePromises;
+    console.log(deleteResults);
 
     res.status(200).json({ message: "Content deleted successfully" });
   } catch (error) {
