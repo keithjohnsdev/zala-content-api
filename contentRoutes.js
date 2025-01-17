@@ -343,10 +343,11 @@ router.delete("/content/delete/:contentId", async (req, res) => {
     console.log("**************logging s3 keys*********");
     console.log(s3_thumbnail);
     console.log(s3_video_url);
+    console.log(typeof s3_thumbnail)
 
     // Extract S3 keys from URLs
-    const videoKey = extractS3Key(s3_video_url);
-    const thumbnailKey = extractS3Key(s3_thumbnail);
+    const videoKey = s3_video_url && extractS3Key(s3_video_url);
+    const thumbnailKey = s3_thumbnail && extractS3Key(s3_thumbnail);
 
     // Delete content metadata from the content table
     await db.query("DELETE FROM content WHERE content_id = $1", [contentId]);
