@@ -342,8 +342,8 @@ router.delete("/content/delete/:contentId", async (req, res) => {
 
     console.log("**************logging s3 keys*********");
     console.log(s3_thumbnail);
-    console.log(s3_video_url);
-    console.log(typeof s3_thumbnail)
+    console.log(Boolean(s3_video_url));
+    console.log(typeof s3_thumbnail);
 
     // Extract S3 keys from URLs
     const videoKey = s3_video_url && extractS3Key(s3_video_url);
@@ -379,8 +379,10 @@ router.delete("/content/delete/:contentId", async (req, res) => {
         .promise(),
     ]);
 
-    const deleteResults = await deletePromises;
-    console.log(deleteResults);
+    if (s3_thumbnail && s3_video_url) {
+      const deleteResults = await deletePromises;
+      console.log(deleteResults);
+    }
 
     res.status(200).json({ message: "Content deleted successfully" });
   } catch (error) {
