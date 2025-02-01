@@ -4,7 +4,6 @@ const postRoutes = require("./postRoutes");
 const cors = require("cors");
 const axios = require("axios");
 const db = require("./db");
-import ZALA_BASE_URL from "config.js";
 
 // Create a new Express application
 const app = express();
@@ -42,7 +41,7 @@ app.use(async (req, res, next) => {
     try {
       // Make a POST request to the external API with the GraphQL query
       const response = await axios.post(
-        `${ZALA_BASE_URL}/gql`,
+        `https://zala-prod-ad856199b736.herokuapp.com/gql`,
         {
           query: `
                         query {
